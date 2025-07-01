@@ -6,7 +6,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 
 const router = Router();
 
-// Create instances
+
 const courseRepo = new CourseRepository();
 const courseService = new CourseService(courseRepo);
 const courseController = new CourseController(courseService);

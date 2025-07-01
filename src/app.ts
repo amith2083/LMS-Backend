@@ -5,6 +5,7 @@ import logger from "./utils/logger";
 import { dbConnect } from "./config/dbConnect";
 import courseRouter from "./routes/courseRoute";
 import moduleRouter from "./routes/moduleRoute";
+import lessonRouter from "./routes/lessonRoute";
 
 dotenv.config();
 
@@ -17,8 +18,9 @@ app.use(morganMiddleware);
 // Routes
 app.use("/api/courses", courseRouter);
 app.use("/api/modules", moduleRouter);
+app.use("/api/lessons", lessonRouter);
 
-// Centralized error-handling middleware 
+// Centralized error-handling middleware
 app.use(
   (
     err: Error & { status?: number },

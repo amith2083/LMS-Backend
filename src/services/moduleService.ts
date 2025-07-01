@@ -3,8 +3,6 @@ import { IModuleService } from "../interfaces/module/IModuleService";
 import { IModuleRepository } from "../interfaces/module/IModuleRepository";
 import { Module } from "../models/module";
 
-
-
 export class ModuleService implements IModuleService {
   private moduleRepository: IModuleRepository;
 
@@ -13,19 +11,22 @@ export class ModuleService implements IModuleService {
   }
 
   async createModule(data: Partial<IModule>): Promise<IModule> {
-   if (typeof data.order === "string") {
-    data.order = parseInt(data.order);
-  }
+    if (typeof data.order === "string") {
+      data.order = parseInt(data.order);
+    }
     if (!data.courseId || !data.title) {
-    throw new Error("Title and courseId are required");
-  }
+      throw new Error("Title and courseId are required");
+    }
 
-  const existing = await this.moduleRepository.findByTitleAndCourse(data?.title,data.courseId);
-  if (existing) {
-    throw new Error("A module with this title already exists in the course.");
-  }
+    const existing = await this.moduleRepository.findByTitleAndCourse(
+      data?.title,
+      data.courseId
+    );
+    if (existing) {
+      throw new Error("A module with this title already exists in the course.");
+    }
 
-  return this.moduleRepository.createModule(data);
+    return this.moduleRepository.createModule(data);
   }
 
   async getModule(moduleId: string): Promise<IModule | null> {
@@ -34,7 +35,10 @@ export class ModuleService implements IModuleService {
     return module;
   }
 
-  async updateModule(moduleId: string, data: Partial<IModule>): Promise<IModule | null> {
+  async updateModule(
+    moduleId: string,
+    data: Partial<IModule>
+  ): Promise<IModule | null> {
     return this.moduleRepository.updateModule(moduleId, data);
   }
 

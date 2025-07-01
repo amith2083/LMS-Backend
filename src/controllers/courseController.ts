@@ -1,10 +1,8 @@
 import { Request, Response } from "express";
 import { ICourseController } from "../interfaces/course/ICourseController";
-import { ICourseService } from "../interfaces/course/ICourseService"
+import { ICourseService } from "../interfaces/course/ICourseService";
 import { STATUS_CODES } from "../constants/http";
 import { ERROR_MESSAGES } from "../constants/messages";
-;
-
 export class CourseController implements ICourseController {
   private courseService: ICourseService;
 
@@ -34,7 +32,10 @@ export class CourseController implements ICourseController {
   }
 
   async updateCourse(req: Request, res: Response): Promise<void> {
-    const updated = await this.courseService.updateCourse(req.params.id, req.body);
+    const updated = await this.courseService.updateCourse(
+      req.params.id,
+      req.body
+    );
     res.status(STATUS_CODES.OK).json(updated);
   }
 
