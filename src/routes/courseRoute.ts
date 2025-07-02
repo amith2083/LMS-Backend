@@ -18,4 +18,5 @@ router.put("/:id", asyncHandler((req, res) => courseController.updateCourse(req,
 router.delete("/:id", asyncHandler((req, res) => courseController.deleteCourse(req, res)));
 
 
+
 export default router;

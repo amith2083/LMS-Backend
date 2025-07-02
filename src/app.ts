@@ -3,9 +3,13 @@ import dotenv from "dotenv";
 import morganMiddleware from "./middlewares/morgan";
 import logger from "./utils/logger";
 import { dbConnect } from "./config/dbConnect";
+import cors from 'cors'
 import courseRouter from "./routes/courseRoute";
 import moduleRouter from "./routes/moduleRoute";
 import lessonRouter from "./routes/lessonRoute";
+import categoryRouter from "./routes/categoryRoute";
+import userRouter from "./routes/userRoute";
+import quizRouter from "./routes/quizRoute";
 
 dotenv.config();
 
@@ -14,11 +18,18 @@ dbConnect();
 
 app.use(express.json());
 app.use(morganMiddleware);
+app.use(cors({
+  origin: "http://localhost:3000", 
+  credentials: true
+}));
 
 // Routes
 app.use("/api/courses", courseRouter);
 app.use("/api/modules", moduleRouter);
 app.use("/api/lessons", lessonRouter);
+app.use("/api/categories", categoryRouter);
+app.use("/api/users", userRouter);
+app.use("/api/quiz", quizRouter);
 
 // Centralized error-handling middleware
 app.use(

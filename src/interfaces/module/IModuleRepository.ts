@@ -9,5 +9,6 @@ export interface IModuleRepository {
   changeModulePublishState(moduleId: string): Promise<boolean>;
   deleteModule(moduleId: string, courseId: string): Promise<void>;
   findByTitleAndCourse(title: string, courseId: string| Types.ObjectId): Promise<IModule | null>;
+  saveModule(module: IModule): Promise<void>;
 
 }

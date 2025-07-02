@@ -73,5 +73,8 @@ export class ModuleRepository implements IModuleRepository {
     courseId,
   }).lean();
 }
+ async saveModule(module: IModule): Promise<void> {
+    await module.save();
+  }
 
 }

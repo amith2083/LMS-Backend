@@ -1,12 +1,18 @@
 import { ILesson } from "../interfaces/lesson/ILesson";
 import { ILessonRepository } from "../interfaces/lesson/ILessonRepository";
 import { ILessonService } from "../interfaces/lesson/ILessonService";
+import { IModuleRepository } from "../interfaces/module/IModuleRepository";
 
 export class LessonService implements ILessonService {
-  private lessonRepository: ILessonRepository;
+ private lessonRepository: ILessonRepository;
+  private moduleRepository: IModuleRepository;
 
-  constructor(lessonRepository: ILessonRepository) {
+  constructor(
+    lessonRepository: ILessonRepository,
+    moduleRepository: IModuleRepository
+  ) {
     this.lessonRepository = lessonRepository;
+    this.moduleRepository = moduleRepository;
   }
 
   async createLesson(
@@ -20,16 +26,18 @@ export class LessonService implements ILessonService {
       throw new Error("A lesson with this title already exists.");
     }
 
-    if (existing) {
-      throw new Error("A lesson with this title already exists.");
-    }
-
+      const module = await this.moduleRepository.getModule(moduleId);
+  if (!module) throw new Error("Module not found");
     // Optionally auto-generate slug
     // if (!data.slug && data.title) {
     //   data.slug = slugify(data.title, { lower: true, strict: true });
     // }
 
-    return this.lessonRepository.createLesson(data, moduleId);
+    const lesson  = await this.lessonRepository.createLesson(data, moduleId);
+      module.lessonIds.push(lesson._id);
+      await this.moduleRepository.saveModule(module);
+return lesson;
+      
   }
 
   async getLesson(lessonId: string): Promise<ILesson | null> {
@@ -50,6 +58,13 @@ export class LessonService implements ILessonService {
   }
 
   async deleteLesson(lessonId: string, moduleId: string): Promise<void> {
-    return this.lessonRepository.deleteLesson(lessonId, moduleId);
-  }
+   const module = await this.moduleRepository.getModule(moduleId);
+  if (!module) throw new Error("Module not found");
+
+  // Remove the lesson ID from the module
+  module.lessonIds = module.lessonIds.filter(id => id.toString() !== lessonId);
+  await this.moduleRepository.saveModule(module); // Save the updated module
+
+  await this.lessonRepository.deleteLesson(lessonId);
+}
 }

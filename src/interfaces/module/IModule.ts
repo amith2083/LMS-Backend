@@ -1,6 +1,7 @@
-import {  Types } from "mongoose";
+import { Document, Types } from "mongoose";
 
-export interface IModule {
+
+export interface IModule extends Document {
   _id: Types.ObjectId;
   title: string;
   description?: string;

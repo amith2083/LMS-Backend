@@ -1,16 +1,16 @@
 import { ILesson } from "../interfaces/lesson/ILesson";
 import { ILessonRepository } from "../interfaces/lesson/ILessonRepository";
 import { Lesson } from "../models/lesson";
-import { Module } from "../models/module";
+
 
 export class LessonRepository implements ILessonRepository {
   async createLesson(data: Partial<ILesson>, moduleId: string): Promise<ILesson> {
     const createdLesson = await Lesson.create(data);
-    const module = await Module.findById(moduleId);
-    if (!module) throw new Error("Module not found");
+    // const module = await Module.findById(moduleId);
+    // if (!module) throw new Error("Module not found");
 
-    module.lessonIds.push(createdLesson._id);
-    await module.save();
+    // module.lessonIds.push(createdLesson._id);
+    // await module.save();
 
     return JSON.parse(JSON.stringify(createdLesson));
   }
@@ -34,15 +34,10 @@ export class LessonRepository implements ILessonRepository {
     return lesson.active;
   }
 
-  async deleteLesson(lessonId: string, moduleId: string): Promise<void> {
-    const module = await Module.findById(moduleId);
-    if (!module) throw new Error("Module not found");
-
-    module.lessonIds = module.lessonIds.filter((id) => id.toString() !== lessonId);
-    await module.save();
-
-    const deleted = await Lesson.findByIdAndDelete(lessonId);
-    if (!deleted) throw new Error("Lesson not found or failed to delete");
+  async deleteLesson(lessonId: string): Promise<void> {
+   
+  const deleted = await Lesson.findByIdAndDelete(lessonId);
+  if (!deleted) throw new Error("Lesson not found or failed to delete");
   }
 
   

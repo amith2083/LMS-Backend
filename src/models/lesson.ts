@@ -1,9 +1,5 @@
-import { ILesson } from "@/app/interfaces/ILesson";
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
-
-
-
-
+import { ILesson } from "../interfaces/lesson/ILesson";
 
 const lessonSchema: Schema<ILesson> = new Schema({
   title: {
@@ -19,7 +15,7 @@ const lessonSchema: Schema<ILesson> = new Schema({
     default: 0,
     type: Number,
   },
-  video_url: {
+  videoKey: {
     required: false,
     type: String,
   },
@@ -43,7 +39,6 @@ const lessonSchema: Schema<ILesson> = new Schema({
     type: Number,
   },
 });
-
 
 export const Lesson: Model<ILesson> =
   mongoose.models.Lesson || mongoose.model<ILesson>("Lesson", lessonSchema);

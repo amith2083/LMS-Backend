@@ -3,6 +3,7 @@ import { ICourseController } from "../interfaces/course/ICourseController";
 import { ICourseService } from "../interfaces/course/ICourseService";
 import { STATUS_CODES } from "../constants/http";
 import { ERROR_MESSAGES } from "../constants/messages";
+;
 export class CourseController implements ICourseController {
   private courseService: ICourseService;
 
@@ -43,4 +44,8 @@ export class CourseController implements ICourseController {
     await this.courseService.deleteCourse(req.params.id);
     res.status(STATUS_CODES.OK).send();
   }
+
+
+  
+
 }
