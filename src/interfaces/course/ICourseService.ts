@@ -7,5 +7,6 @@ export interface ICourseService {
   getCourse(id: string): Promise<ICourse | null>;
   createCourse(data: Partial<ICourse>): Promise<ICourse>;
   updateCourse(id: string, data: Partial<ICourse>): Promise<ICourse | null>;
+ updateCourseImage(courseId: string, file: Express.Multer.File): Promise<ICourse | null>
   deleteCourse(id: string): Promise<void>;
 }

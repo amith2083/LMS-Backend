@@ -3,7 +3,6 @@ import { ICourseController } from "../interfaces/course/ICourseController";
 import { ICourseService } from "../interfaces/course/ICourseService";
 import { STATUS_CODES } from "../constants/http";
 import { ERROR_MESSAGES } from "../constants/messages";
-;
 export class CourseController implements ICourseController {
   private courseService: ICourseService;
 
@@ -39,13 +38,24 @@ export class CourseController implements ICourseController {
     );
     res.status(STATUS_CODES.OK).json(updated);
   }
+  async updateCourseImage(req: Request, res: Response): Promise<void> {
+    const file = req.file;
 
+    const courseId = req.params.id;
+
+    if (!file) {
+      res.status(400).json({ message: "Image file is required" });
+      return;
+    }
+
+    const updatedCourse = await this.courseService.updateCourseImage(
+      courseId,
+      file
+    );
+    res.status(STATUS_CODES.OK).json(updatedCourse);
+  }
   async deleteCourse(req: Request, res: Response): Promise<void> {
     await this.courseService.deleteCourse(req.params.id);
     res.status(STATUS_CODES.OK).send();
   }
-
-
-  
-
 }

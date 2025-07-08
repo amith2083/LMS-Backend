@@ -1,14 +1,23 @@
 import { ICourse } from "../interfaces/course/ICourse";
 import { ICourseRepository } from "../interfaces/course/ICourseRepository";
+
 import { ICourseService } from "../interfaces/course/ICourseService";
-import { CourseRepository } from "../repositories/courseRepository";
+import { IFileUploadService } from "../interfaces/file/IFileUploadService";
+
 
 export class CourseService implements ICourseService {
-  private courseRepository: ICourseRepository;
+  // private courseRepository: ICourseRepository;
+  // private fileUploadService: IFileUploadService;
 
-  constructor(courseRepository: ICourseRepository) {
-    this.courseRepository = courseRepository;
-  }
+  // constructor(courseRepository: ICourseRepository) {
+  //   this.courseRepository = courseRepository;
+  // }
+
+    constructor(
+      private courseRepository : ICourseRepository,
+      private fileUploadService: IFileUploadService,
+    
+    ) {}
 
   async getCourses(): Promise<ICourse[]> {
     return this.courseRepository.getCourses();
@@ -28,7 +37,10 @@ export class CourseService implements ICourseService {
   ): Promise<ICourse | null> {
     return this.courseRepository.updateCourse(id, data);
   }
-
+async updateCourseImage(courseId: string, file: Express.Multer.File): Promise<ICourse | null> {
+    const imageUrl = await this.fileUploadService.uploadFile(file, "lms/courses");
+    return this.courseRepository.updateCourse(courseId, { thumbnail: imageUrl });
+  }
   async deleteCourse(id: string): Promise<void> {
     return this.courseRepository.deleteCourse(id);
   }
