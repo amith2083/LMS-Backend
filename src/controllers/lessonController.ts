@@ -3,10 +3,7 @@ import { ILessonController } from "../interfaces/lesson/ILessonController";
 import { ILessonService } from "../interfaces/lesson/ILessonService";
 import { STATUS_CODES } from "../constants/http";
 import { ERROR_MESSAGES } from "../constants/messages";
-import { nanoid } from "nanoid";
-import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { s3 } from "../utils/s3";
+
 
 export class LessonController implements ILessonController {
   constructor(private lessonService: ILessonService) {}
@@ -38,13 +35,6 @@ export class LessonController implements ILessonController {
     res.status(STATUS_CODES.OK).json(updated);
   }
 
-  // async changeLessonPublishState(req: Request, res: Response): Promise<void> {
-  //   const status = await this.lessonService.changeLessonPublishState(
-  //     req.params.id
-  //   );
-  //   res.status(STATUS_CODES.OK).json({ status });
-  // }
-
   async deleteLesson(req: Request, res: Response): Promise<void> {
     await this.lessonService.deleteLesson(
       req.params.id,
@@ -56,38 +46,16 @@ export class LessonController implements ILessonController {
   }
   async getUploadSignedUrl(req: Request, res: Response): Promise<void> {
     const { fileName, fileType } = req.body;
-
-    if (!fileName || !fileType) {
-      res.status(400).json({ error: "Missing fileName or fileType" });
-      return;
-    }
-
-    const key = `course-videos/${nanoid()}-${fileName}`;
-    const command = new PutObjectCommand({
-      Bucket:process.env.AWS_S3_BUCKET_NAME!,
-      Key: key,
-      ContentType: fileType,
-    });
-
-    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 300 }); // 5 min
-    const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-
-    res.status(200).json({ signedUrl, fileUrl, key });
+    const data = await this.lessonService.getUploadSignedUrl(
+      fileName,
+      fileType
+    );
+    res.status(200).json(data);
   }
 
   async getPlaybackSignedUrl(req: Request, res: Response): Promise<void> {
     const { key } = req.body;
-    if (!key) {
-      res.status(400).json({ error: "Missing key" });
-      return;
-    }
-
-    const command = new GetObjectCommand({
-      Bucket:process.env.AWS_S3_BUCKET_NAME!,
-      Key: key,
-    });
-
-    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 }); // 1 hour
-    res.status(200).json({ signedUrl });
+    const data = await this.lessonService.getPlaybackSignedUrl(key);
+    res.status(200).json(data);
   }
 }

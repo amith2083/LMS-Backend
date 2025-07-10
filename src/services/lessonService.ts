@@ -1,7 +1,11 @@
+import { nanoid } from "nanoid";
 import { ILesson } from "../interfaces/lesson/ILesson";
 import { ILessonRepository } from "../interfaces/lesson/ILessonRepository";
 import { ILessonService } from "../interfaces/lesson/ILessonService";
 import { IModuleRepository } from "../interfaces/module/IModuleRepository";
+import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { s3 } from "../utils/s3";
 
 export class LessonService implements ILessonService {
  private lessonRepository: ILessonRepository;
@@ -69,4 +73,34 @@ return lesson;
 
   await this.lessonRepository.deleteLesson(lessonId);
 }
+async getUploadSignedUrl(fileName: string, fileType: string) {
+  if (!fileName || !fileType || !fileType.startsWith("video/")) {
+    throw new Error("Invalid fileName or fileType");
+  }
+
+  const extension = fileName.split(".").pop();
+  const key = `course-videos/${nanoid()}.${extension}`;
+  const command = new PutObjectCommand({
+    Bucket: process.env.AWS_S3_BUCKET_NAME!,
+    Key: key,
+    ContentType: fileType,
+  });
+
+  const signedUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
+  const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+
+  return { signedUrl, fileUrl, key };
+}
+async getPlaybackSignedUrl(key: string) {
+  if (!key) throw new Error("Missing key");
+
+  const command = new GetObjectCommand({
+    Bucket: process.env.AWS_S3_BUCKET_NAME!,
+    Key: key,
+  });
+
+  const signedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+  return { signedUrl };
+}
+
 }
