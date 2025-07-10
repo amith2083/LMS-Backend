@@ -38,12 +38,12 @@ export class LessonController implements ILessonController {
     res.status(STATUS_CODES.OK).json(updated);
   }
 
-  async changeLessonPublishState(req: Request, res: Response): Promise<void> {
-    const status = await this.lessonService.changeLessonPublishState(
-      req.params.id
-    );
-    res.status(STATUS_CODES.OK).json({ status });
-  }
+  // async changeLessonPublishState(req: Request, res: Response): Promise<void> {
+  //   const status = await this.lessonService.changeLessonPublishState(
+  //     req.params.id
+  //   );
+  //   res.status(STATUS_CODES.OK).json({ status });
+  // }
 
   async deleteLesson(req: Request, res: Response): Promise<void> {
     await this.lessonService.deleteLesson(

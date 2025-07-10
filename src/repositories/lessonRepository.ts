@@ -25,14 +25,14 @@ export class LessonRepository implements ILessonRepository {
     return updatedLesson 
   }
 
-  async changeLessonPublishState(lessonId: string): Promise<boolean> {
-    const lesson = await Lesson.findById(lessonId).exec();
-    if (!lesson) throw new Error("Lesson not found");
+  // async changeLessonPublishState(lessonId: string): Promise<boolean> {
+  //   const lesson = await Lesson.findById(lessonId).exec();
+  //   if (!lesson) throw new Error("Lesson not found");
 
-    lesson.active = !lesson.active;
-    await lesson.save();
-    return lesson.active;
-  }
+  //   lesson.active = !lesson.active;
+  //   await lesson.save();
+  //   return lesson.active;
+  // }
 
   async deleteLesson(lessonId: string): Promise<void> {
    

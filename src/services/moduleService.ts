@@ -42,9 +42,9 @@ export class ModuleService implements IModuleService {
     return this.moduleRepository.updateModule(moduleId, data);
   }
 
-  async changeModulePublishState(moduleId: string): Promise<boolean> {
-    return this.moduleRepository.changeModulePublishState(moduleId);
-  }
+  // async changeModulePublishState(moduleId: string): Promise<boolean> {
+  //   return this.moduleRepository.changeModulePublishState(moduleId);
+  // }
 
   async deleteModule(moduleId: string, courseId: string): Promise<void> {
     return this.moduleRepository.deleteModule(moduleId, courseId);

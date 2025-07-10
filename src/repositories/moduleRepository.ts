@@ -33,8 +33,7 @@ export class ModuleRepository implements IModuleRepository {
   }
 
   async getModule(moduleId: string): Promise<IModule | null> {
-    const moduleWithLesson = await Module.findById(moduleId)
-      .lean();
+    const moduleWithLesson = await Module.findById(moduleId).populate("lessonIds");
     return moduleWithLesson 
   }
 
@@ -46,14 +45,14 @@ export class ModuleRepository implements IModuleRepository {
     return updatedModule 
   }
 
-  async changeModulePublishState(moduleId: string): Promise<boolean> {
-    const module = await Module.findById(moduleId);
-    if (!module) throw new Error("Module not found");
+  // async changeModulePublishState(moduleId: string): Promise<boolean> {
+  //   const module = await Module.findById(moduleId);
+  //   if (!module) throw new Error("Module not found");
 
-    module.status = !module.status;
-    await module.save();
-    return module.status;
-  }
+  //   module.status = !module.status;
+  //   await module.save();
+  //   return module.status;
+  // }
 
   async deleteModule(moduleId: string, courseId: string): Promise<void> {
     const course = await Course.findById(courseId);

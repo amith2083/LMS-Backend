@@ -17,7 +17,7 @@ const moduleController = new ModuleController(moduleService);
 router.post("/", asyncHandler((req, res) => moduleController.createModule(req, res)));
 router.get("/:id", asyncHandler((req, res) => moduleController.getModule(req, res)));
 router.put("/:id", asyncHandler((req, res) => moduleController.updateModule(req, res)));
-router.patch("/:id/publish", asyncHandler((req, res) => moduleController.changeModulePublishState(req, res)));
+// router.patch("/:id/publish", asyncHandler((req, res) => moduleController.changeModulePublishState(req, res)));
 router.delete("/:id", asyncHandler((req, res) => moduleController.deleteModule(req, res)));
 
 export default router;

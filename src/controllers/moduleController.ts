@@ -31,12 +31,12 @@ export class ModuleController implements IModuleController {
     res.status(STATUS_CODES.OK).json(updated);
   }
 
-  async changeModulePublishState(req: Request, res: Response): Promise<void> {
-    const status = await this.moduleService.changeModulePublishState(
-      req.params.id
-    );
-    res.status(STATUS_CODES.OK).json({ status });
-  }
+  // async changeModulePublishState(req: Request, res: Response): Promise<void> {
+  //   const status = await this.moduleService.changeModulePublishState(
+  //     req.params.id
+  //   );
+  //   res.status(STATUS_CODES.OK).json({ status });
+  // }
 
   async deleteModule(req: Request, res: Response): Promise<void> {
     await this.moduleService.deleteModule(

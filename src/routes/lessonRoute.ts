@@ -18,9 +18,9 @@ const lessonController = new LessonController(lessonService);
 router.post("/", asyncHandler((req, res) => lessonController.createLesson(req, res))); 
 router.get("/:id", asyncHandler((req, res) => lessonController.getLesson(req, res)));
 router.put("/:id", asyncHandler((req, res) => lessonController.updateLesson(req, res)));
-router.patch("/:id/publish", asyncHandler((req, res) => lessonController.changeLessonPublishState(req, res)));
+// router.patch("/:id/publish", asyncHandler((req, res) => lessonController.changeLessonPublishState(req, res)));
 router.delete("/:id", asyncHandler((req, res) => lessonController.deleteLesson(req, res)));
-router.post("/", asyncHandler((req, res) => lessonController.createLesson(req, res)));
-router.get("/:id", asyncHandler((req, res) => lessonController.getLesson(req, res)));
+// router.post("/", asyncHandler((req, res) => lessonController.createLesson(req, res)));
+// router.get("/:id", asyncHandler((req, res) => lessonController.getLesson(req, res)));
 
 export default router;

@@ -53,16 +53,18 @@ return lesson;
     return this.lessonRepository.updateLesson(lessonId, data);
   }
 
-  async changeLessonPublishState(lessonId: string): Promise<boolean> {
-    return this.lessonRepository.changeLessonPublishState(lessonId);
-  }
+  // async changeLessonPublishState(lessonId: string): Promise<boolean> {
+  //   return this.lessonRepository.changeLessonPublishState(lessonId);
+  // }
 
   async deleteLesson(lessonId: string, moduleId: string): Promise<void> {
    const module = await this.moduleRepository.getModule(moduleId);
   if (!module) throw new Error("Module not found");
 
   // Remove the lesson ID from the module
-  module.lessonIds = module.lessonIds.filter(id => id.toString() !== lessonId);
+  // module.lessonIds = module.lessonIds.filter(id => id.toString() !== lessonId);
+  
+  module.lessonIds = module.lessonIds.filter(id => !id.equals(lessonId));
   await this.moduleRepository.saveModule(module); // Save the updated module
 
   await this.lessonRepository.deleteLesson(lessonId);
