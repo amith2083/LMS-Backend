@@ -1,5 +1,7 @@
+import { IUser } from "../user/IUser";
+
 export interface IOtpService {
-  sendOtp(email: string, purpose: 'verification' | 'reset'): Promise<void>;
+  sendOtp(email: string, purpose: 'verification' | 'reset',userData?: Partial<IUser>): Promise<void>;
   verifyOtp(email: string, otp: number): Promise<boolean>;
   resendOtp(email: string): Promise<void>;
   forgotPassword(email: string): Promise<void>;

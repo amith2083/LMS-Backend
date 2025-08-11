@@ -17,12 +17,8 @@ const userSchema: Schema<IUser> = new Schema(
     isGoogleUser: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: true },
-    resetOtp: {
-      type: Number,
-    },
-    resetOtpExpiry: {
-      type: Date,
-    },
+    isEmailVerified: { type: Boolean, default: false },
+  
   },
   { timestamps: true }
 );

@@ -4,7 +4,7 @@ import { Course } from "../models/course";
 
 export class CourseRepository implements ICourseRepository {
   async getCourses(): Promise<ICourse[]> {
-    return Course.find().populate("instructor category modules").lean();
+    return Course.find({status:true}).populate("instructor category modules").lean();
   }
 
   async getCourse(id: string): Promise<ICourse | null> {
@@ -13,7 +13,7 @@ export class CourseRepository implements ICourseRepository {
 
   async createCourse(data: Partial<ICourse>): Promise<ICourse> {
     const course = new Course(data);
-    return await course.save();
+    return await course.save(); 
   }
 
   async updateCourse(id: string, data: Partial<ICourse>): Promise<ICourse | null> {

@@ -5,24 +5,22 @@ import { AppError } from "../utils/asyncHandler";
 
 export class UserRepository implements IUserRepository {
   async getUsers(): Promise<IUser[]> {
-    const users = await User.find({ role: { $ne: "admin" } }).lean();
+    const users = await User.find({ role: { $ne: "admin" } });
     return users;
   }
 
   async getUserById(userId: string): Promise<IUser | null> {
-    const user = await User.findById(userId).lean();
+    const user = await User.findById(userId);
     return user;
   }
 
   async getUserByEmail(email: string): Promise<IUser | null> {
-    const user = await User.findOne({ email }).lean();
+    const user = await User.findOne({ email });
     return user;
   }
 
   async createUser(data: Partial<IUser>): Promise<IUser> {
-    console.log("userdatarespository", data);
     const user = await User.create(data);
-    console.log("user", user.toObject());
     return user.toObject();
   }
 
@@ -32,13 +30,8 @@ export class UserRepository implements IUserRepository {
   ): Promise<IUser | null> {
     const updated = await User.findByIdAndUpdate(userId, data, {
       new: true,
-    }).lean();
+    });
     if (!updated) throw new AppError(404, "User not found");
     return updated;
-  }
-
-  async deleteUser(userId: string): Promise<void> {
-    const deleted = await User.findByIdAndDelete(userId);
-    if (!deleted) throw new AppError(404, "User not found");
   }
 }

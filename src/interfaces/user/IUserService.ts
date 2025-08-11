@@ -5,11 +5,13 @@ export interface IUserService {
   getUsers(): Promise<IUser[]>;
   getUserById(userId: string): Promise<IUser | null>;
   getUserByEmail(email: string): Promise<IUser | null>;
-  createUser(data: Partial<IUser>, verificationDoc?: Express.Multer.File): Promise<IUser>;
+  createUser(data: Partial<IUser>, verificationDoc?: Express.Multer.File): Promise<{ message: string }>;
   updateUser(userId: string, data: Partial<IUser>): Promise<IUser | null>;
-  deleteUser(userId: string): Promise<void>;
+  // deleteUser(userId: string): Promise<void>;
   login(email: string, password: string): Promise<IUser>;
   googleSync(email: string, name: string, image: string): Promise<IUser>;
+  checkTokenReuse(jti: string): Promise<boolean>
+  markTokenAsUsed(jti: string): Promise<void>
 }
 
 

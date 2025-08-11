@@ -15,6 +15,8 @@ export interface IUser extends Document {
   isGoogleUser?: boolean;
   isBlocked?: boolean;
   isVerified?: boolean;
-  resetOtp?: number;
-  resetOtpExpiry?: Date;
+  isEmailVerified:boolean,
+  
+  // resetOtp?: number;
+  // resetOtpExpiry?: Date;
 }

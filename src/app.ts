@@ -4,6 +4,8 @@ import morganMiddleware from "./middlewares/morgan";
 import logger from "./utils/logger";
 import { dbConnect } from "./config/dbConnect";
 import cors from 'cors'
+import csrfRouter from "./routes/csrfRoute";
+import cookieParser from "cookie-parser";
 import courseRouter from "./routes/courseRoute";
 import moduleRouter from "./routes/moduleRoute";
 import lessonRouter from "./routes/lessonRoute";
@@ -15,11 +17,11 @@ dotenv.config();
 
 const app = express();
 dbConnect();
-
+app.use(cookieParser());
 app.use(express.json());
 app.use(morganMiddleware);
 app.use(cors({
-  origin: "http://localhost:3000", 
+  origin: "http://localhost:3001", 
   credentials: true
 }));
 
@@ -30,6 +32,7 @@ app.use("/api/lessons", lessonRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/users", userRouter);
 app.use("/api/quiz", quizRouter);
+app.use("/", csrfRouter);
 
 // Centralized error-handling middleware
 app.use(

@@ -7,6 +7,9 @@ import { AppError } from "../utils/asyncHandler";
 import bcrypt from "bcrypt";
 import { Express } from "express";
 
+// Simple in-memory cache for used jtis 
+const usedJtis: Set<string> = new Set();
+
 export class UserService implements IUserService {
   constructor(
     private userRepository: IUserRepository,
@@ -26,10 +29,42 @@ export class UserService implements IUserService {
     return this.userRepository.getUserByEmail(email);
   }
 
-  async createUser(
+  // async createUser(
+  //   data: Partial<IUser>,
+  //   verificationDoc?: Express.Multer.File
+  // ): Promise<IUser> {
+  //   const existing = await this.userRepository.getUserByEmail(data.email!);
+  //   if (existing) throw new AppError(400, "This email is already registered.");
+
+  //   if (data.password) {
+  //     data.password = await bcrypt.hash(data.password, 10);
+  //   }
+
+  //   let docUrl: string | undefined;
+  //   if (verificationDoc) {
+  //     docUrl = await this.fileUploadService.uploadFile(
+  //       verificationDoc,
+  //       "verification-docs"
+  //     );
+  //   }
+
+  //   const userData: Partial<IUser> = {
+  //     ...data,
+  //     isVerified: data.role === "instructor" ? false : true,
+  //     isEmailVerified: false, // Require email verification for all
+  //     doc: docUrl,
+  //   };
+
+  //   const user = await this.userRepository.createUser(userData);
+  //   if (user) {
+  //     await this.otpService.sendOtp(user.email, "verification");
+  //   }
+  //   return user;
+  // }
+async createUser(
     data: Partial<IUser>,
     verificationDoc?: Express.Multer.File
-  ): Promise<IUser> {
+  ): Promise<{ message: string }> {
     const existing = await this.userRepository.getUserByEmail(data.email!);
     if (existing) throw new AppError(400, "This email is already registered.");
 
@@ -48,16 +83,13 @@ export class UserService implements IUserService {
     const userData: Partial<IUser> = {
       ...data,
       isVerified: data.role === "instructor" ? false : true,
+      isEmailVerified: false, // Will be set to true on verification
       doc: docUrl,
     };
 
-    const user = await this.userRepository.createUser(userData);
-    if (user) {
-      await this.otpService.sendOtp(user.email, "verification");
-    }
-    return user;
+    await this.otpService.sendOtp(data.email!, "verification", userData);
+    return { message: "OTP sent for verification" };
   }
-
   async updateUser(
     userId: string,
     data: Partial<IUser>
@@ -68,19 +100,19 @@ export class UserService implements IUserService {
     return this.userRepository.updateUser(userId, data);
   }
 
-  async deleteUser(userId: string): Promise<void> {
-    return this.userRepository.deleteUser(userId);
-  }
-
   async login(email: string, password: string): Promise<IUser> {
     const user = await this.userRepository.getUserByEmail(email);
     if (!user || !user.password) throw new AppError(400, "Invalid credentials");
-    // Check if user is blocked
     if (user.isBlocked) {
       throw new AppError(403, "Your account has been blocked by the admin.");
     }
-
-    // Check if user is an instructor and not verified
+    if (!user.isEmailVerified) {
+    await this.otpService.resendOtp(email); // Resend OTP
+    throw new AppError(
+      403,
+      "Your email is not verified. A new OTP has been sent to your email."
+    );
+  }
     if (user.role === "instructor" && !user.isVerified) {
       throw new AppError(
         403,
@@ -106,12 +138,21 @@ export class UserService implements IUserService {
         isVerified: true,
       });
     } else if (!user.isGoogleUser) {
-      user = await this.userRepository.updateUser(user._id, {
+      user = await this.userRepository.updateUser(user._id.toString(), {
         isGoogleUser: true,
         profilePicture: image,
       });
     }
 
     return user!;
+  }
+
+  async checkTokenReuse(jti: string): Promise<boolean> {
+    return usedJtis.has(jti);
+  }
+
+  async markTokenAsUsed(jti: string): Promise<void> {
+    usedJtis.add(jti);
+    // Optional: Clean up old jtis periodically to prevent memory leaks
   }
 }
