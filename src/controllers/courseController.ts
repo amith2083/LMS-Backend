@@ -25,7 +25,21 @@ export class CourseController implements ICourseController {
     }
     res.status(STATUS_CODES.OK).json(course);
   }
+async getCoursesByInstructorId(req: Request, res: Response): Promise<void> {
+    const instructorId = req.params.instructorId;
+    const courses = await this.courseService.getCoursesByInstructorId(instructorId);
+    res.status(STATUS_CODES.OK).json(courses);
+  }
 
+ 
+  async getCourseForAdminById(req: Request, res: Response): Promise<void> {
+    const course = await this.courseService.getCourseForAdminById(req.params.id);
+    if (!course) {
+      res.status(STATUS_CODES.NOT_FOUND).json({ message: ERROR_MESSAGES.NOT_FOUND });
+      return;
+    }
+    res.status(STATUS_CODES.OK).json(course);
+  }
   async createCourse(req: Request, res: Response): Promise<void> {
     const course = await this.courseService.createCourse(req.body);
     res.status(STATUS_CODES.CREATED).json(course);

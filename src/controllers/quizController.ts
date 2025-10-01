@@ -38,6 +38,10 @@ export class QuizsetController implements IQuizsetController {
   }
 
   async addQuizToQuizset(req: Request, res: Response): Promise<void> {
+    const { quizsetId } = req.params;
+    const quizData = req.body;
+    console.log('Received quizsetId:', quizsetId);
+    console.log('Received quizData:', quizData);
     await this.quizsetService.addQuizToQuizset(req.params.id, req.body);
     res.status(STATUS_CODES.CREATED).send();
   }

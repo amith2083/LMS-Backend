@@ -148,6 +148,7 @@ export class UserController implements IUserController {
 
   refreshToken = async (req: Request, res: Response) => {
     const refreshToken = req.cookies.refreshToken;
+    console.log('refresh',refreshToken)
     if (!refreshToken) {
       throw new AppError(STATUS_CODES.UNAUTHORIZED, "Refresh token is required");
     }

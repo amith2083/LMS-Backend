@@ -44,4 +44,12 @@ async updateCourseImage(courseId: string, file: Express.Multer.File): Promise<IC
   async deleteCourse(id: string): Promise<void> {
     return this.courseRepository.deleteCourse(id);
   }
+  async getCoursesByInstructorId(instructorId: string): Promise<ICourse[]> {
+    return this.courseRepository.getCoursesByInstructorId(instructorId);
+  }
+
+  // New method to get course for admin by ID with status true
+  async getCourseForAdminById(id: string): Promise<ICourse | null> {
+    return this.courseRepository.getCourseForAdminById(id);
+  }
 }

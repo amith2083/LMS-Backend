@@ -9,17 +9,20 @@ export const authenticateToken = (
   next: NextFunction
 ) => {
   const accessToken = req.cookies.accessToken;
+  console.log('accesstoken',accessToken)
 
   if (!accessToken) {
-    throw new AppError(STATUS_CODES.UNAUTHORIZED, "Access token is required");
+     // Use next() to pass the error to global handler
+    return next(new AppError(401, "Access token is required"));
   }
 
   try {
     const decoded = jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET as string);
     req.user = decoded;
+    console.log('🤗😁',req.user)
     next();
   } catch (error) {
-    throw new AppError(STATUS_CODES.UNAUTHORIZED, "Invalid or expired access token");
+   return next(new AppError(401, "Invalid or expired access token"));
   }
 };
 

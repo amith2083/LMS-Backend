@@ -18,6 +18,6 @@ router.put("/:id", asyncHandler((req, res) => quizsetController.updateQuizset(re
 router.delete("/:id", asyncHandler((req, res) => quizsetController.deleteQuizset(req, res)));
 router.post("/:id/quiz", asyncHandler((req, res) => quizsetController.addQuizToQuizset(req, res)));
 router.delete("/:quizsetId/quiz/:quizId", asyncHandler((req, res) => quizsetController.deleteQuizFromQuizset(req, res)));
-router.patch("/:id/toggle", asyncHandler((req, res) => quizsetController.togglePublishQuizset(req, res)));
+router.put("/:id/toggle", asyncHandler((req, res) => quizsetController.togglePublishQuizset(req, res)));
 
 export default router;
