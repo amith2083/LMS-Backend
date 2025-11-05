@@ -10,11 +10,48 @@ export class CourseController implements ICourseController {
     this.courseService = courseService;
   }
 
-  async getCourses(req: Request, res: Response): Promise<void> {
-    const courses = await this.courseService.getCourses();
-    res.status(STATUS_CODES.OK).json(courses);
+ async getCourses(req: Request, res: Response): Promise<void> {
+  const {
+    search,
+    categories: categoriesRaw,
+    price: priceRaw,
+    sort = '',
+    page = '1',
+    limit = '10',
+  } = req.query;
+
+  // Parse categories: Handle array or comma-separated string, filter empties
+  let categories: string[] = [];
+  if (categoriesRaw) {
+    if (Array.isArray(categoriesRaw)) {
+      categories = categoriesRaw.filter((c: string) => c && c.trim());
+    } else {
+      categories = (categoriesRaw as string).split(',').map((c: string) => c.trim()).filter(Boolean);
+    }
   }
 
+  // Parse price: Same as above
+  let price: string[] = [];
+  if (priceRaw) {
+    if (Array.isArray(priceRaw)) {
+      price = priceRaw.filter((p: string) => p && p.trim());
+    } else {
+      price = (priceRaw as string).split(',').map((p: string) => p.trim()).filter(Boolean);
+    }
+  }
+
+  const params = {
+    search: search as string,
+    categories,
+    price,
+    sort: sort as string,
+    page: parseInt(page as string),
+    limit: parseInt(limit as string),
+  };
+
+  const result = await this.courseService.getCourses(params);
+  res.status(STATUS_CODES.OK).json(result);
+}
   async getCourse(req: Request, res: Response): Promise<void> {
     const course = await this.courseService.getCourse(req.params.id);
     if (!course) {

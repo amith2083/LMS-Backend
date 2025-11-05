@@ -1,8 +1,5 @@
-import csurf from "csurf";
 import rateLimit from "express-rate-limit";
 import { Request, Response } from "express";
-
-export const csrfProtection = csurf({ cookie: true });
 
 export const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

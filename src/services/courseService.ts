@@ -19,8 +19,20 @@ export class CourseService implements ICourseService {
     
     ) {}
 
-  async getCourses(): Promise<ICourse[]> {
-    return this.courseRepository.getCourses();
+async getCourses(params?: {
+    search?: string;
+    categories?: string[];
+    price?: string[];
+    sort?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    courses: ICourse[];
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+  }> {
+    return this.courseRepository.getCourses(params);
   }
 
   async getCourse(id: string): Promise<ICourse | null> {

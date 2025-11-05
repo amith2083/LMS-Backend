@@ -67,33 +67,35 @@ export class UserController implements IUserController {
 
   login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
+
     const user = await this.userService.login(email, password);
 
-    // Generate tokens
-    const accessToken = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      process.env.JWT_ACCESS_SECRET as string,
-      { expiresIn: "15m" }
-    );
-    const refreshToken = jwt.sign(
-      { id: user._id, email: user.email, jti: uuidv4(), rotatedAt: Date.now() },
-      process.env.JWT_REFRESH_SECRET as string,
-      { expiresIn: "1d" }
-    );
-
-    // Set tokens in HttpOnly cookies
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60 * 1000, // 15 minutes
-    });
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 1 * 24 * 60 * 60 * 1000, // 30 days
-    });
+//     // Generate tokens
+//     const accessToken = jwt.sign(
+//       { id: user._id, email: user.email, role: user.role },
+//       process.env.JWT_ACCESS_SECRET as string,
+//       { expiresIn: "50m" }
+//     );
+  
+//     const refreshToken = jwt.sign(
+//       { id: user._id, email: user.email, jti: uuidv4(), rotatedAt: Date.now() },
+//       process.env.JWT_REFRESH_SECRET as string,
+//       { expiresIn: "1d" }
+//     );
+// console.log('=======',accessToken,refreshToken)
+//     // Set tokens in HttpOnly cookies
+//     res.cookie("accessToken", accessToken, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: "lax",
+//       maxAge: 50 * 60 * 1000, // 15 minutes
+//     });
+//     res.cookie("refreshToken", refreshToken, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: "lax",
+//       maxAge: 1 * 24 * 60 * 60 * 1000, 
+//     });
 
     res.status(STATUS_CODES.OK).json({
       id: user._id,
@@ -105,7 +107,45 @@ export class UserController implements IUserController {
       profilePicture: user.profilePicture,
     });
   };
+setTokens = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) throw new AppError(400, "Email required");
 
+  const user = await this.userService.getUserByEmail(email);
+  if (!user) throw new AppError(404, "User not found");
+
+  // Generate tokens
+  const accessToken = jwt.sign(
+    { id: user._id, email: user.email, role: user.role },
+    process.env.JWT_ACCESS_SECRET!,
+    { expiresIn: "50m" }
+  );
+
+  const refreshToken = jwt.sign(
+    { id: user._id, jti: uuidv4() },
+    process.env.JWT_REFRESH_SECRET!,
+    { expiresIn: "7d" }
+  );
+
+  // Set HttpOnly cookies
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 50 * 60 * 1000,
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  res.status(200).json({ message: "Tokens set" });
+};
   googleSync = async (req: Request, res: Response) => {
     const { email, name, image } = req.body;
     const user = await this.userService.googleSync(email, name, image);
@@ -114,7 +154,7 @@ export class UserController implements IUserController {
     const accessToken = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
       process.env.JWT_ACCESS_SECRET as string,
-      { expiresIn: "15m" }
+      { expiresIn: "50m" }
     );
     const refreshToken = jwt.sign(
       { id: user._id, email: user.email, jti: uuidv4(), rotatedAt: Date.now() },
@@ -127,7 +167,7 @@ export class UserController implements IUserController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 15 * 60 * 1000,
+      maxAge: 50 * 60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -143,6 +183,7 @@ export class UserController implements IUserController {
       role: user.role,
       isVerified: user.isVerified,
       isBlocked: user.isBlocked,
+    
     });
   };
 
@@ -175,7 +216,7 @@ export class UserController implements IUserController {
       const newAccessToken = jwt.sign(
         { id: decoded.id, email: decoded.email, role: (await this.userService.getUserById(decoded.id))?.role },
         process.env.JWT_ACCESS_SECRET as string,
-        { expiresIn: "15m" }
+        { expiresIn: "50m" }
       );
       const newRefreshToken = jwt.sign(
         { id: decoded.id, email: decoded.email, jti: uuidv4(), rotatedAt: Date.now() },
@@ -187,13 +228,13 @@ export class UserController implements IUserController {
       res.cookie("accessToken", newAccessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 15 * 60 * 1000,
+        sameSite: "lax",
+        maxAge: 50 * 60 * 1000,
       });
       res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 1 * 24 * 60 * 60 * 1000,
       });
 

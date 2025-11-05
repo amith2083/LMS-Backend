@@ -26,6 +26,17 @@ export class LessonController implements ILessonController {
     }
     res.status(STATUS_CODES.OK).json(lesson);
   }
+  async getLessonBySlug(req: Request, res: Response): Promise<void> {
+   
+    const lesson = await this.lessonService.getLessonBySlug(req.params.slug);
+    if (!lesson) {
+      res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: ERROR_MESSAGES.NOT_FOUND });
+      return;
+    }
+    res.status(STATUS_CODES.OK).json(lesson);
+  }
 
   async updateLesson(req: Request, res: Response): Promise<void> {
     const updated = await this.lessonService.updateLesson(

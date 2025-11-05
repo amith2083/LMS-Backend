@@ -4,10 +4,14 @@ import { Request, Response } from "express";
 import { STATUS_CODES } from "../constants/http";
 import { AppError } from "../utils/asyncHandler";
 import { IEnrollment } from "../interfaces/enrollment/IEnrollment";
+import jwt from "jsonwebtoken";
 
 
 export interface AuthenticatedRequest extends Request {
   user?: { id: string; role: string; isVerified?: boolean; isBlocked?: boolean };
+}
+interface OptionalUserRequest extends Request {
+  user?: { id: string; role?: string; isBlocked?: boolean; /* add other fields */ };
 }
 
 export class EnrollmentController implements IEnrollmentController {
@@ -108,6 +112,71 @@ async createEnrollment(req: AuthenticatedRequest, res: Response): Promise<void> 
       );
     }
   }
+//   async hasEnrollmentForCourse(req: AuthenticatedRequest, res: Response): Promise<void> {
+//   try {
+//     // if (!req.user) {
+//     //   throw new AppError(STATUS_CODES.UNAUTHORIZED, "Unauthenticated");
+//     // }
+//     if (!req.user) {
+//          res.status(200).json({ enrolled: false });
+//          return
+//       }
+
+//     const courseId = req.params.courseId;
+//     const studentId = req.user.id;
+
+//     const hasEnrollment = await this.enrollmentService.hasEnrollmentForCourse(courseId, studentId);
+//     res.status(200).json({ enrolled: hasEnrollment });
+//   } catch (error: any) {
+//     throw new AppError(
+//       error.statusCode || STATUS_CODES.INTERNAL_SERVER_ERROR,
+//       error.message || "Failed to check enrollment"
+//     );
+//   }
+// }
+async hasEnrollmentForCourse(req: OptionalUserRequest, res: Response): Promise<void> {
+    let user = req.user;  // Starts as undefined
+  
+    // Manual optional auth: Verify token if not already set
+    if (!user) {
+      const accessToken = req.cookies.accessToken;
+      if (accessToken) {
+        try {
+          const decoded = jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET as string) as {
+            id: string;
+            role: string;
+            // Add other expected payload fields here
+          };
+          user = decoded;  // Now user = { id: 'user123', role: 'student', ... }
+          req.user = user;  // Set on req for consistency (optional)
+          console.log('🤗😁', user);  // Your debug log
+        } catch (error) {
+          console.error("Invalid or expired access token (optional auth skipped)");
+          user = undefined;  // Treat as unauthenticated
+        }
+      }
+    }
+
+    try {
+      if (!user) {
+        // No user: Guest or invalid token → Not enrolled
+        res.status(200).json({ enrolled: false });
+        return;
+      }
+
+      const courseId = req.params.courseId;
+      const studentId = user.id;  // ✅ Now available from decoded token
+
+      const hasEnrollment = await this.enrollmentService.hasEnrollmentForCourse(courseId, studentId);
+      res.status(200).json({ enrolled: hasEnrollment });
+    } catch (error: any) {
+      throw new AppError(
+        error.statusCode || STATUS_CODES.INTERNAL_SERVER_ERROR,
+        error.message || "Failed to check enrollment"
+      );
+    }
+  }
+
 
 
 

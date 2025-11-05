@@ -8,8 +8,10 @@ export const authenticateToken = (
   res: Response,
   next: NextFunction
 ) => {
-  const accessToken = req.cookies.accessToken;
-  console.log('accesstoken',accessToken)
+
+console.log('req.cookies:', req.cookies);
+  const accessToken = req.cookies.accessToken 
+ 
 
   if (!accessToken) {
      // Use next() to pass the error to global handler

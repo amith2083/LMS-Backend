@@ -3,7 +3,19 @@ import { ICourse } from "./ICourse";
 ;
 
 export interface ICourseService {
-  getCourses(): Promise<ICourse[]>;
+getCourses(params?: {
+  search?: string;
+  categories?: string[];
+  price?: string[];
+  sort?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{
+  courses: ICourse[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+}>;
   getCourse(id: string): Promise<ICourse | null>;
    getCoursesByInstructorId(instructorId: string): Promise<ICourse[]>
    getCourseForAdminById(id: string): Promise<ICourse | null>

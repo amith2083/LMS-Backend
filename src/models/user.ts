@@ -12,7 +12,9 @@ const userSchema: Schema<IUser> = new Schema(
     bio: { type: String },
     phone: { type: Number },
     website: { type: String },
-    profilePicture: { type: String },
+    profilePicture: { type: String,
+      default:'https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-Transparent-Free-PNG-Clip-Art.png'
+     },
     designation: { type: String },
     isGoogleUser: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },

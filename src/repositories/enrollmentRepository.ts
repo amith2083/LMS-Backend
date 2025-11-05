@@ -60,12 +60,20 @@ export class EnrollmentRepository implements IEnrollmentRepository {
       .lean();
     return enrollments;
   }
-
+//for getting enrollments for paticular user
   async getEnrollmentsForUser(userId: string): Promise<IEnrollment[]> {
     const enrollments = await Enrollment.find({ student: userId })
       .populate("course")
       .lean();
     return enrollments;
+  }
+  async hasEnrollmentForCourse(courseId: string, studentId: string): Promise<boolean> {
+    const enrollment = await Enrollment.findOne({
+      course: courseId,
+      student: studentId,
+    }).lean();
+
+    return !!enrollment; // returns true if found, false otherwise
   }
 
   // async updateEnrollment(

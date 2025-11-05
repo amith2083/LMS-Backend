@@ -6,6 +6,6 @@ export interface IEnrollmentController {
   getEnrollment(req: Request, res: Response): Promise<void>;
   getEnrollmentsForCourse(req: Request, res: Response): Promise<void>;
   getEnrollmentsForUser(req: Request, res: Response): Promise<void>;
-  updateEnrollment(req: Request, res: Response): Promise<void>;
-  deleteEnrollment(req: Request, res: Response): Promise<void>;
+   hasEnrollmentForCourse(req:Request, res: Response): Promise<void>
+ 
 }

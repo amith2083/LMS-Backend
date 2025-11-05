@@ -168,6 +168,8 @@ async createEnrollment(data: Partial<IEnrollment>): Promise<IEnrollment | { sess
     if (!user) throw new Error("User not found");
     return this.enrollmentRepository.getEnrollmentsForUser(userId);
   }
-
+ async hasEnrollmentForCourse(courseId: string, studentId: string): Promise<boolean> {
+    return this.enrollmentRepository.hasEnrollmentForCourse(courseId, studentId);
+  }
 
 }

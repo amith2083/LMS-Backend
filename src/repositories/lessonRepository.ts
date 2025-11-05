@@ -19,6 +19,10 @@ export class LessonRepository implements ILessonRepository {
     const lesson = await Lesson.findById(lessonId).lean().exec();
     return lesson
   }
+    async getLessonBySlug(slug: string): Promise<ILesson | null> {
+    const lesson = await Lesson.findOne({slug:slug}).lean().exec();
+    return lesson
+  }
 
   async updateLesson(lessonId: string, data: Partial<ILesson>): Promise<ILesson | null> {
     const updatedLesson = await Lesson.findByIdAndUpdate(lessonId, data, { new: true }).lean().exec();

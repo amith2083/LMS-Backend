@@ -49,6 +49,11 @@ return lesson;
     if (!lesson) throw new Error("Lesson not found");
     return lesson;
   }
+    async getLessonBySlug(slug: string): Promise<ILesson | null> {
+    const lesson = await this.lessonRepository.getLessonBySlug(slug);
+    if (!lesson) throw new Error("Lesson not found");
+    return lesson;
+  }
 
   async updateLesson(
     lessonId: string,

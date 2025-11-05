@@ -1,10 +1,14 @@
-import express, { Request, Response, NextFunction, ErrorRequestHandler } from "express";
+import express, {
+  Request,
+  Response,
+  NextFunction,
+  ErrorRequestHandler,
+} from "express";
 import dotenv from "dotenv";
 import morganMiddleware from "./middlewares/morgan";
 import logger from "./utils/logger";
 import { dbConnect } from "./config/dbConnect";
-import cors from 'cors'
-import csrfRouter from "./routes/csrfRoute";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import courseRouter from "./routes/courseRoute";
 import moduleRouter from "./routes/moduleRoute";
@@ -13,6 +17,8 @@ import categoryRouter from "./routes/categoryRoute";
 import userRouter from "./routes/userRoute";
 import quizRouter from "./routes/quizRoute";
 import enrollmentRouter from "./routes/enrollmentRoute";
+import watchRouter from "./routes/watchRoute";
+import reportRouter from "./routes/reportRoute";
 import { AppError } from "./utils/asyncHandler";
 
 dotenv.config();
@@ -22,12 +28,12 @@ dbConnect();
 app.use(cookieParser());
 app.use(express.json());
 app.use(morganMiddleware);
-app.use(cors({
-  origin: "http://localhost:3000", 
-  // methods: ["GET", "POST", "PUT", "PATCH", "DELETE"], // Explicitly allow PATCH
-  //   allowedHeaders: ["Content-Type", "X-CSRF-Token"], // Allow CSRF token header
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 
 // Routes
 app.use("/api/courses", courseRouter);
@@ -37,7 +43,8 @@ app.use("/api/categories", categoryRouter);
 app.use("/api/users", userRouter);
 app.use("/api/quizsets", quizRouter);
 app.use("/api/enrollments", enrollmentRouter);
-app.use("/", csrfRouter);
+app.use("/api/watch", watchRouter);
+app.use("/api/report", reportRouter);
 
 // Centralized error-handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
@@ -46,13 +53,13 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
 
   res.status(err.status || 500).json({
     success: false,
-    message: err.message || "Internal Server Error"
+    message: err.message || "Internal Server Error",
   });
 };
 
