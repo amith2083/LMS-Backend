@@ -1,52 +1,43 @@
-import { IModule } from "../interfaces/module/IModule";
-import { IModuleService } from "../interfaces/module/IModuleService";
-import { IModuleRepository } from "../interfaces/module/IModuleRepository";
-import { Module } from "../models/module";
+// src/services/moduleService.ts
+import { AppError } from '../utils/asyncHandler';
+import { IModule } from '../interfaces/module/IModule';
+import { IModuleRepository } from '../interfaces/module/IModuleRepository';
+import { IModuleService } from '../interfaces/module/IModuleService';
+
 
 export class ModuleService implements IModuleService {
-  private moduleRepository: IModuleRepository;
-
-  constructor(moduleRepository: IModuleRepository) {
-    this.moduleRepository = moduleRepository;
-  }
+  constructor(private moduleRepository: IModuleRepository) {}
 
   async createModule(data: Partial<IModule>): Promise<IModule> {
-    if (typeof data.order === "string") {
-      data.order = parseInt(data.order);
-    }
-    if (!data.courseId || !data.title) {
-      throw new Error("Title and courseId are required");
+    if (!data.title || !data.courseId) {
+      throw new AppError(400, 'Title and courseId are required');
     }
 
-    const existing = await this.moduleRepository.findByTitleAndCourse(
-      data?.title,
-      data.courseId
-    );
+    if (typeof data.order === 'string') {
+      data.order = parseInt(data.order, 10);
+    }
+
+    const existing = await this.moduleRepository.findByTitleAndCourse(data.title, data.courseId);
     if (existing) {
-      throw new Error("A module with this title already exists in the course.");
+      throw new AppError(409, 'A module with this title already exists in the course.');
     }
 
     return this.moduleRepository.createModule(data);
   }
 
-  async getModule(moduleId: string): Promise<IModule | null> {
+  async getModule(moduleId: string): Promise<IModule> {
     const module = await this.moduleRepository.getModule(moduleId);
-    if (!module) throw new Error("Module not found");
+    if (!module) throw new AppError(404, 'Module not found');
     return module;
   }
 
-  async updateModule(
-    moduleId: string,
-    data: Partial<IModule>
-  ): Promise<IModule | null> {
-    return this.moduleRepository.updateModule(moduleId, data);
+  async updateModule(moduleId: string, data: Partial<IModule>): Promise<IModule> {
+    const updated = await this.moduleRepository.updateModule(moduleId, data);
+    if (!updated) throw new AppError(404, 'Module not found');
+    return updated;
   }
 
-  // async changeModulePublishState(moduleId: string): Promise<boolean> {
-  //   return this.moduleRepository.changeModulePublishState(moduleId);
-  // }
-
   async deleteModule(moduleId: string, courseId: string): Promise<void> {
-    return this.moduleRepository.deleteModule(moduleId, courseId);
+    await this.moduleRepository.deleteModule(moduleId, courseId);
   }
 }

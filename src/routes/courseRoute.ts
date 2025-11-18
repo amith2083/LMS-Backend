@@ -1,32 +1,32 @@
-import { Router } from "express";
-import { CourseRepository } from "../repositories/courseRepository";
-import { CourseService } from "../services/courseService";
-import { CourseController } from "../controllers/courseController";
-import { asyncHandler } from "../utils/asyncHandler";
-import { FileUploadService } from "../services/fileUploadService";
-import { upload } from "../middlewares/upload";
-import { authenticateToken } from "../middlewares/authenciateToken";
+
+import { Router } from 'express';
+import { asyncHandler } from '../utils/asyncHandler';
+import { upload } from '../middlewares/upload';
+import { CourseController } from '../controllers/courseController';
+import { CourseService } from '../services/courseService';
+import { CourseRepository } from '../repositories/courseRepository';
+import { FileUploadService } from '../services/fileUploadService';
+import { CategoryRepository } from '../repositories/categoryRepository';
+import { CategoryService } from '../services/categoryService';
 
 const router = Router();
 
-
-// const courseRepo = new CourseRepository();
-// const courseService = new CourseService(courseRepo);
-// const courseController = new CourseController(courseService);
-const courseRepo = new CourseRepository();
+const categoryRepo = new CategoryRepository();
 const fileUploadService = new FileUploadService();
-const courseService = new CourseService(courseRepo, fileUploadService);
+const courseRepo = new CourseRepository();
+const categoryService = new CategoryService(categoryRepo, fileUploadService,courseRepo);
+
+const courseService = new CourseService(courseRepo, fileUploadService, categoryService);
 const courseController = new CourseController(courseService);
 
-router.get("/", asyncHandler((req, res) => courseController.getCourses(req, res)));
-router.get("/:id", asyncHandler((req, res) => courseController.getCourse(req, res)));
-router.get("/instructor/:instructorId", asyncHandler((req, res) => courseController.getCoursesByInstructorId(req, res)));
-router.get("/admin/:id", asyncHandler((req, res) => courseController.getCourseForAdminById(req, res)));
-router.post("/", asyncHandler((req, res) => courseController.createCourse(req, res)));
-router.put("/:id", asyncHandler((req, res) => courseController.updateCourse(req, res)));
-router.put("/:id/image",upload.single("image"),asyncHandler((req, res) => courseController.updateCourseImage(req, res)));
-router.delete("/:id", asyncHandler((req, res) => courseController.deleteCourse(req, res)));
+router.get('/', asyncHandler(courseController.getCourses.bind(courseController)));
+router.get('/admin', asyncHandler(courseController.getCoursesForAdmin.bind(courseController)));
+router.get('/:id', asyncHandler(courseController.getCourse.bind(courseController)));
+router.get('/instructor/:instructorId', asyncHandler(courseController.getCoursesByInstructorId.bind(courseController)));
 
-
+router.post('/', asyncHandler(courseController.createCourse.bind(courseController)));
+router.put('/:id', asyncHandler(courseController.updateCourse.bind(courseController)));
+router.put('/:id/image', upload.single('image'), asyncHandler(courseController.updateCourseImage.bind(courseController)));
+router.delete('/:id', asyncHandler(courseController.deleteCourse.bind(courseController)));
 
 export default router;

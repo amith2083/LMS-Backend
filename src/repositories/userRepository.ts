@@ -1,22 +1,19 @@
-import { User } from "../models/user";
-import { IUserRepository } from "../interfaces/user/IUserRepository";
-import { IUser } from "../interfaces/user/IUser";
-import { AppError } from "../utils/asyncHandler";
+
+import { IUser } from '../interfaces/user/IUser';
+import { IUserRepository } from '../interfaces/user/IUserRepository';
+import { User } from '../models/user';
 
 export class UserRepository implements IUserRepository {
   async getUsers(): Promise<IUser[]> {
-    const users = await User.find({ role: { $ne: "admin" } });
-    return users;
+    return User.find({ role: { $ne: 'admin' } }).lean().exec();
   }
 
   async getUserById(userId: string): Promise<IUser | null> {
-    const user = await User.findById(userId);
-    return user;
+    return User.findById(userId).lean().exec();
   }
 
   async getUserByEmail(email: string): Promise<IUser | null> {
-    const user = await User.findOne({ email });
-    return user;
+    return User.findOne({ email }).lean().exec();
   }
 
   async createUser(data: Partial<IUser>): Promise<IUser> {
@@ -24,14 +21,7 @@ export class UserRepository implements IUserRepository {
     return user.toObject();
   }
 
-  async updateUser(
-    userId: string,
-    data: Partial<IUser>
-  ): Promise<IUser | null> {
-    const updated = await User.findByIdAndUpdate(userId, data, {
-      new: true,
-    });
-    if (!updated) throw new AppError(404, "User not found");
-    return updated;
+  async updateUser(userId: string, data: Partial<IUser>): Promise<IUser | null> {
+    return User.findByIdAndUpdate(userId, data, { new: true }).lean().exec();
   }
 }

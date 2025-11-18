@@ -11,4 +11,5 @@ export interface IQuizsetRepository {
   deleteQuizFromQuizset(quizsetId: string, quizId: string): Promise<void>;
   changeQuizsetPublishState(quizsetId: string): Promise<boolean>;
   deleteQuizset(quizsetId: string): Promise<void>;
+  findByTitle(title: string, excludeId?: string): Promise<IQuizset | null> 
 }

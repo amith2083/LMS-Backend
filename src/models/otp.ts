@@ -8,7 +8,9 @@ const otpSchema = new Schema<IOtp>({
   expiresAt: { type: Number, required: true },
   purpose: { type: String, enum: ["verification", "reset"], required: true },
   userData: { type: Schema.Types.Mixed, required: false },
-});
+}, {
+    timestamps: true,
+  });
 
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 

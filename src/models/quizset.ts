@@ -20,6 +20,8 @@ const quizsetSchema = new Schema<IQuizset>({
     required: true,
     default: false,
   },
-});
+}, {
+    timestamps: true,
+  });
 export const Quizset: Model<IQuizset> =
   mongoose.models.Quizset || mongoose.model<IQuizset>("Quizset", quizsetSchema);

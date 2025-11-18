@@ -1,53 +1,47 @@
-import { IOtpService } from "../interfaces/otp/IOtpService";
-import { IOtpRepository } from "../interfaces/otp/IOtpRepository";
-import { AppError } from "../utils/asyncHandler";
-import { sendOtpEmail } from "../utils/sendOtpEmail";
-import { UserRepository } from "../repositories/userRepository";
-import bcrypt from "bcrypt";
-import { IUser } from "../interfaces/user/IUser";
+import { AppError } from '../utils/asyncHandler';
+import { IOtpRepository } from '../interfaces/otp/IOtpRepository';
+import { IUserRepository } from '../interfaces/user/IUserRepository';
+import { sendOtpEmail } from '../utils/sendOtpEmail';
+import bcrypt from 'bcrypt';
+import { STATUS_CODES } from '../constants/http';
+import { IOtpService } from '../interfaces/otp/IOtpService';
 
 export class OtpService implements IOtpService {
   constructor(
     private otpRepository: IOtpRepository,
-    private userRepository: UserRepository
+    private userRepository: IUserRepository
   ) {}
 
   private generateOtp(): number {
-    return Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+    return Math.floor(100000 + Math.random() * 900000);
   }
 
-  async sendOtp(
-    email: string,
-    purpose: "verification" | "reset",
-    userData?: Partial<IUser>
-  ): Promise<void> {
-    if (purpose === "reset") {
+  async sendOtp(email: string, purpose: 'verification' | 'reset', userData?: Partial<any>): Promise<void> {
+    if (purpose === 'reset') {
       const user = await this.userRepository.getUserByEmail(email);
-      if (!user) throw new AppError(404, "User not found");
-    } else if (purpose === "verification") {
-      if (!userData) throw new AppError(400, "User data required for registration verification");
-      const existingUser = await this.userRepository.getUserByEmail(email);
-      if (existingUser) throw new AppError(400, "This email is already registered.");
+      if (!user) throw new AppError(STATUS_CODES.NOT_FOUND, 'User not found');
+    } else if (purpose === 'verification') {
+      if (!userData) throw new AppError(STATUS_CODES.BAD_REQUEST, 'User data required');
+      const existing = await this.userRepository.getUserByEmail(email);
+      if (existing) throw new AppError(STATUS_CODES.CONFLICT, 'Email already registered');
     }
 
     const otp = this.generateOtp();
-    const expiresAt =
-      Date.now() + (purpose === "verification" ? 5 : 2) * 60 * 1000; // 5 min for verification, 2 for reset
+    const expiresAt = Date.now() + (purpose === 'verification' ? 5 : 2) * 60 * 1000;
     await this.otpRepository.saveOtp(email, otp, expiresAt, purpose, userData);
     await sendOtpEmail(email, otp);
   }
 
   async verifyOtp(email: string, otp: number): Promise<boolean> {
     const otpDoc = await this.otpRepository.getOtpByEmail(email);
-    if (!otpDoc) throw new AppError(404, "OTP not found or expired. Please register again.");
-    if (Date.now() > otpDoc.expiresAt)
-      throw new AppError(400, "OTP has expired. Please register again.");
-    if (otpDoc.otp !== otp) throw new AppError(400, "Invalid OTP");
-    if (otpDoc.purpose !== "verification") throw new AppError(400, "Invalid OTP purpose");
+    if (!otpDoc) throw new AppError(STATUS_CODES.NOT_FOUND, 'OTP not found or expired');
+    if (Date.now() > otpDoc.expiresAt) throw new AppError(STATUS_CODES.BAD_REQUEST, 'OTP expired');
+    if (otpDoc.otp !== otp) throw new AppError(STATUS_CODES.BAD_REQUEST, 'Invalid OTP');
+    if (otpDoc.purpose !== 'verification') throw new AppError(STATUS_CODES.BAD_REQUEST, 'Invalid OTP purpose');
 
     if (otpDoc.userData) {
-      const userDataWithVerified = { ...otpDoc.userData, isEmailVerified: true };
-      await this.userRepository.createUser(userDataWithVerified);
+      const userData = { ...otpDoc.userData, isEmailVerified: true };
+      await this.userRepository.createUser(userData);
     }
 
     await this.otpRepository.deleteOtp(email);
@@ -56,35 +50,28 @@ export class OtpService implements IOtpService {
 
   async resendOtp(email: string): Promise<void> {
     const otpDoc = await this.otpRepository.getOtpByEmail(email);
-    if (!otpDoc || otpDoc.purpose !== "verification") {
-      throw new AppError(404, "No pending registration found. Please register again.");
+    if (!otpDoc || otpDoc.purpose !== 'verification') {
+      throw new AppError(STATUS_CODES.NOT_FOUND, 'No pending registration');
     }
-    await this.sendOtp(email, "verification", otpDoc.userData);
+    await this.sendOtp(email, 'verification', otpDoc.userData);
   }
 
   async forgotPassword(email: string): Promise<void> {
-    await this.sendOtp(email, "reset");
+    await this.sendOtp(email, 'reset');
   }
 
-  async resetPassword(
-    email: string,
-    otp: number,
-    newPassword: string
-  ): Promise<void> {
+  async resetPassword(email: string, otp: number, newPassword: string): Promise<void> {
     const otpDoc = await this.otpRepository.getOtpByEmail(email);
-    if (!otpDoc) throw new AppError(404, "OTP not found");
-    if (Date.now() > otpDoc.expiresAt)
-      throw new AppError(400, "OTP has expired");
-    if (otpDoc.otp !== otp) throw new AppError(400, "Invalid OTP");
-    if (otpDoc.purpose !== "reset") throw new AppError(400, "Invalid OTP purpose");
+    if (!otpDoc) throw new AppError(STATUS_CODES.NOT_FOUND, 'OTP not found');
+    if (Date.now() > otpDoc.expiresAt) throw new AppError(STATUS_CODES.BAD_REQUEST, 'OTP expired');
+    if (otpDoc.otp !== otp) throw new AppError(STATUS_CODES.BAD_REQUEST, 'Invalid OTP');
+    if (otpDoc.purpose !== 'reset') throw new AppError(STATUS_CODES.BAD_REQUEST, 'Invalid OTP purpose');
 
     const user = await this.userRepository.getUserByEmail(email);
-    if (!user) throw new AppError(404, "User not found");
+    if (!user) throw new AppError(STATUS_CODES.NOT_FOUND, 'User not found');
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.userRepository.updateUser(user._id.toString(), {
-      password: hashedPassword,
-    });
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.userRepository.updateUser(user._id.toString(), { password: hashed });
     await this.otpRepository.deleteOtp(email);
   }
 }

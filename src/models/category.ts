@@ -19,7 +19,10 @@ const categorySchema = new Schema<ICategory>({
     required: false,
     default: true,
   },
-});
+},
+ {
+    timestamps: true,
+  });
 
 export const Category =
   mongoose.models.Category ||

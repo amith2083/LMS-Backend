@@ -1,26 +1,22 @@
-import { Router } from "express";
-import { asyncHandler } from "../utils/asyncHandler";
 
-import { ReportService } from "../services/reportService";
-import { ReportController } from "../controllers/reportController";
-import { ReportRepository } from "../repositories/reportRepository";
-import { CourseRepository } from "../repositories/courseRepository";
-import { ModuleRepository } from "../repositories/moduleRepository";
-import { authenticateToken } from "../middlewares/authenciateToken";
+import { Router } from 'express';
+import { asyncHandler } from '../utils/asyncHandler';
+import { authenticateToken } from '../middlewares/authenciateToken';
+import { ReportController } from '../controllers/reportController';
+import { ReportService } from '../services/reportService';
+import { ReportRepository } from '../repositories/reportRepository';
+import { CourseRepository } from '../repositories/courseRepository';
+import { ModuleRepository } from '../repositories/moduleRepository';
 
 const router = Router();
 
-const reportRepository = new ReportRepository();
-const courseRepository = new CourseRepository();
-const moduleRepository = new ModuleRepository();
-const reportService = new ReportService(
-  reportRepository,
-  courseRepository,
-  moduleRepository
-);
+const reportRepo = new ReportRepository();
+const courseRepo = new CourseRepository();
+const moduleRepo = new ModuleRepository();
+const reportService = new ReportService(reportRepo, courseRepo, moduleRepo);
 const reportController = new ReportController(reportService);
 
-router.get("/:courseId",authenticateToken, asyncHandler((req, res) => reportController.getReport(req, res)));
-router.post("/",authenticateToken, asyncHandler((req, res) => reportController.createWatchReport(req, res)));
+router.get('/:courseId', authenticateToken, asyncHandler(reportController.getReport.bind(reportController)));
+router.post('/', authenticateToken, asyncHandler(reportController.createWatchReport.bind(reportController)));
 
 export default router;

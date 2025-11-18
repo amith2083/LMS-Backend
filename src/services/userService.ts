@@ -1,14 +1,15 @@
-import { IUserService } from "../interfaces/user/IUserService";
-import { IUserRepository } from "../interfaces/user/IUserRepository";
-import { IFileUploadService } from "../interfaces/file/IFileUploadService";
-import { IOtpService } from "../interfaces/otp/IOtpService";
-import { IUser } from "../interfaces/user/IUser";
-import { AppError } from "../utils/asyncHandler";
-import bcrypt from "bcrypt";
-import { Express } from "express";
+import { AppError } from '../utils/asyncHandler';
+import { IUser } from '../interfaces/user/IUser';
+import { IUserRepository } from '../interfaces/user/IUserRepository';
+import { IFileUploadService } from '../interfaces/file/IFileUploadService';
+import { IOtpService } from '../interfaces/otp/IOtpService';
+import bcrypt from 'bcrypt';
+import { Express } from 'express';
+import { STATUS_CODES } from '../constants/http';
+import { IUserService } from '../interfaces/user/IUserService';
 
-// Simple in-memory cache for used jtis 
-const usedJtis: Set<string> = new Set();
+
+const usedJtis = new Set<string>(); // In-memory jti blacklist
 
 export class UserService implements IUserService {
   constructor(
@@ -21,107 +22,69 @@ export class UserService implements IUserService {
     return this.userRepository.getUsers();
   }
 
-  async getUserById(userId: string): Promise<IUser | null> {
-    return this.userRepository.getUserById(userId);
+  async getUserById(userId: string): Promise<IUser> {
+    const user = await this.userRepository.getUserById(userId);
+    if (!user) throw new AppError(STATUS_CODES.NOT_FOUND, 'User not found');
+    return user;
   }
 
-  async getUserByEmail(email: string): Promise<IUser | null> {
-    return this.userRepository.getUserByEmail(email);
+  async getUserByEmail(email: string): Promise<IUser> {
+    const user = await this.userRepository.getUserByEmail(email);
+    if (!user) throw new AppError(STATUS_CODES.NOT_FOUND, 'User not found');
+    return user;
   }
 
-  // async createUser(
-  //   data: Partial<IUser>,
-  //   verificationDoc?: Express.Multer.File
-  // ): Promise<IUser> {
-  //   const existing = await this.userRepository.getUserByEmail(data.email!);
-  //   if (existing) throw new AppError(400, "This email is already registered.");
-
-  //   if (data.password) {
-  //     data.password = await bcrypt.hash(data.password, 10);
-  //   }
-
-  //   let docUrl: string | undefined;
-  //   if (verificationDoc) {
-  //     docUrl = await this.fileUploadService.uploadFile(
-  //       verificationDoc,
-  //       "verification-docs"
-  //     );
-  //   }
-
-  //   const userData: Partial<IUser> = {
-  //     ...data,
-  //     isVerified: data.role === "instructor" ? false : true,
-  //     isEmailVerified: false, // Require email verification for all
-  //     doc: docUrl,
-  //   };
-
-  //   const user = await this.userRepository.createUser(userData);
-  //   if (user) {
-  //     await this.otpService.sendOtp(user.email, "verification");
-  //   }
-  //   return user;
-  // }
-async createUser(
-    data: Partial<IUser>,
-    verificationDoc?: Express.Multer.File
-  ): Promise<{ message: string }> {
-    const existing = await this.userRepository.getUserByEmail(data.email!);
-    if (existing) throw new AppError(400, "This email is already registered.");
-
-    if (data.password) {
-      data.password = await bcrypt.hash(data.password, 10);
+  async createUser(data: Partial<IUser>, verificationDoc?: Express.Multer.File): Promise<{ message: string }> {
+    if (!data.email || !data.password) {
+      throw new AppError(STATUS_CODES.BAD_REQUEST, 'Email and password are required');
     }
 
+    const existing = await this.userRepository.getUserByEmail(data.email);
+    if (existing) throw new AppError(STATUS_CODES.CONFLICT, 'This email is already registered.');
+
+    const hashedPassword = await bcrypt.hash(data.password, 10);
     let docUrl: string | undefined;
     if (verificationDoc) {
-      docUrl = await this.fileUploadService.uploadFile(
-        verificationDoc,
-        "verification-docs"
-      );
+      docUrl = await this.fileUploadService.uploadFile(verificationDoc, 'verification-docs');
     }
 
     const userData: Partial<IUser> = {
       ...data,
-      isVerified: data.role === "instructor" ? false : true,
-      isEmailVerified: false, // Will be set to true on verification
+      password: hashedPassword,
+      isVerified: data.role === 'instructor' ? false : true,
+      isEmailVerified: false,
       doc: docUrl,
     };
 
-    await this.otpService.sendOtp(data.email!, "verification", userData);
-    return { message: "OTP sent for verification" };
+    await this.otpService.sendOtp(data.email, 'verification', userData);
+    return { message: 'OTP sent for verification' };
   }
-  async updateUser(
-    userId: string,
-    data: Partial<IUser>
-  ): Promise<IUser | null> {
+
+  async updateUser(userId: string, data: Partial<IUser>): Promise<IUser> {
     if (data.password) {
       data.password = await bcrypt.hash(data.password, 10);
     }
-    return this.userRepository.updateUser(userId, data);
+    const updated = await this.userRepository.updateUser(userId, data);
+    if (!updated) throw new AppError(STATUS_CODES.NOT_FOUND, 'User not found');
+    return updated;
   }
 
   async login(email: string, password: string): Promise<IUser> {
     const user = await this.userRepository.getUserByEmail(email);
-    if (!user || !user.password) throw new AppError(400, "Invalid credentials");
-    if (user.isBlocked) {
-      throw new AppError(403, "Your account has been blocked by the admin.");
-    }
+    if (!user || !user.password) throw new AppError(STATUS_CODES.BAD_REQUEST, 'Invalid credentials');
+    if (user.isBlocked) throw new AppError(STATUS_CODES.FORBIDDEN, 'Your account has been blocked by the admin.');
+
     if (!user.isEmailVerified) {
-    await this.otpService.resendOtp(email); // Resend OTP
-    throw new AppError(
-      403,
-      "Your email is not verified. A new OTP has been sent to your email."
-    );
-  }
-    if (user.role === "instructor" && !user.isVerified) {
-      throw new AppError(
-        403,
-        "Your instructor account has not been approved by the admin."
-      );
+      await this.otpService.resendOtp(email);
+      throw new AppError(STATUS_CODES.FORBIDDEN, 'Email not verified. A new OTP has been sent.');
+    }
+
+    if (user.role === 'instructor' && !user.isVerified) {
+      throw new AppError(STATUS_CODES.FORBIDDEN, 'Instructor account not approved by admin.');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) throw new AppError(400, "Invalid credentials");
+    if (!isMatch) throw new AppError(STATUS_CODES.BAD_REQUEST, 'Invalid credentials');
 
     return user;
   }
@@ -136,6 +99,7 @@ async createUser(
         profilePicture: image,
         isGoogleUser: true,
         isVerified: true,
+        isEmailVerified: true,
       });
     } else if (!user.isGoogleUser) {
       user = await this.userRepository.updateUser(user._id.toString(), {
@@ -144,7 +108,7 @@ async createUser(
       });
     }
 
-    return user!;
+    return user;
   }
 
   async checkTokenReuse(jti: string): Promise<boolean> {
@@ -153,6 +117,5 @@ async createUser(
 
   async markTokenAsUsed(jti: string): Promise<void> {
     usedJtis.add(jti);
-    // Optional: Clean up old jtis periodically to prevent memory leaks
   }
 }

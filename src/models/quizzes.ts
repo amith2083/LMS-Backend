@@ -24,7 +24,9 @@ const quizzesSchema: Schema<IQuiz> = new Schema({
     default: 5,
     type: Number,
   },
-});
+}, {
+    timestamps: true,
+  });
 
 
 export const Quiz: Model<IQuiz> = mongoose.models.Quiz || mongoose.model<IQuiz>("Quiz", quizzesSchema);

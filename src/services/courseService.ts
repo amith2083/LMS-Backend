@@ -1,67 +1,75 @@
-import { ICourse } from "../interfaces/course/ICourse";
-import { ICourseRepository } from "../interfaces/course/ICourseRepository";
+// src/services/courseService.ts
+import { AppError } from '../utils/asyncHandler';
+import { ICourseService } from '../interfaces/course/ICourseService';
+import { ICourse } from '../interfaces/course/ICourse';
+import { ICourseRepository } from '../interfaces/course/ICourseRepository';
+import { IFileUploadService } from '../interfaces/file/IFileUploadService';
+import { ICategoryService } from '../interfaces/category/ICategoryService';
 
-import { ICourseService } from "../interfaces/course/ICourseService";
-import { IFileUploadService } from "../interfaces/file/IFileUploadService";
 
 
 export class CourseService implements ICourseService {
-  // private courseRepository: ICourseRepository;
-  // private fileUploadService: IFileUploadService;
+  constructor(
+    private courseRepository: ICourseRepository,
+    private fileUploadService: IFileUploadService,
+    private categoryService: ICategoryService
+  ) {}
 
-  // constructor(courseRepository: ICourseRepository) {
-  //   this.courseRepository = courseRepository;
-  // }
-
-    constructor(
-      private courseRepository : ICourseRepository,
-      private fileUploadService: IFileUploadService,
-    
-    ) {}
-
-async getCourses(params?: {
+  async getCourses(params?: {
     search?: string;
-    categories?: string[];
-    price?: string[];
+    category?: string;
+    price?: string;
     sort?: string;
     page?: number;
     limit?: number;
-  }): Promise<{
-    courses: ICourse[];
-    totalCount: number;
-    currentPage: number;
-    totalPages: number;
-  }> {
+  }) {
+    // Validate category exists
+    if (params?.category) {
+      const cat = await this.categoryService.getCategory(params.category);
+      if (!cat) throw new AppError(404, 'Category not found');
+    }
+
     return this.courseRepository.getCourses(params);
   }
 
-  async getCourse(id: string): Promise<ICourse | null> {
-    return this.courseRepository.getCourse(id);
+  async getCourse(id: string): Promise<ICourse> {
+    const course = await this.courseRepository.getCourse(id);
+    if (!course) throw new AppError(404, 'Course not found');
+    return course;
+  }
+
+  async getCoursesByInstructorId(instructorId: string): Promise<ICourse[]> {
+    const courses = await this.courseRepository.getCoursesByInstructorId(instructorId);
+    return courses;
+  }
+
+  async getCoursesForAdmin(): Promise<ICourse[]> {
+    const courses = await this.courseRepository.getCoursesForAdmin();
+    return courses;
   }
 
   async createCourse(data: Partial<ICourse>): Promise<ICourse> {
     return this.courseRepository.createCourse(data);
   }
 
-  async updateCourse(
-    id: string,
-    data: Partial<ICourse>
-  ): Promise<ICourse | null> {
-    return this.courseRepository.updateCourse(id, data);
-  }
-async updateCourseImage(courseId: string, file: Express.Multer.File): Promise<ICourse | null> {
-    const imageUrl = await this.fileUploadService.uploadFile(file, "lms/courses");
-    return this.courseRepository.updateCourse(courseId, { thumbnail: imageUrl });
-  }
-  async deleteCourse(id: string): Promise<void> {
-    return this.courseRepository.deleteCourse(id);
-  }
-  async getCoursesByInstructorId(instructorId: string): Promise<ICourse[]> {
-    return this.courseRepository.getCoursesByInstructorId(instructorId);
+  async updateCourse(id: string, data: Partial<ICourse>): Promise<ICourse> {
+    const updated = await this.courseRepository.updateCourse(id, data);
+    if (!updated) throw new AppError(404, 'Course not found');
+    return updated;
   }
 
-  // New method to get course for admin by ID with status true
-  async getCourseForAdminById(id: string): Promise<ICourse | null> {
-    return this.courseRepository.getCourseForAdminById(id);
+  async updateCourseImage(courseId: string, file: Express.Multer.File): Promise<ICourse> {
+    if (!file) throw new AppError(400, 'Image file is required');
+
+    const imageUrl = await this.fileUploadService.uploadFile(file, 'lms/courses');
+    const updated = await this.courseRepository.updateCourse(courseId, { thumbnail: imageUrl });
+    if (!updated) throw new AppError(404, 'Course not found');
+    return updated;
+  }
+
+  async deleteCourse(id: string): Promise<void> {
+    const course = await this.courseRepository.getCourse(id);
+    if (!course) throw new AppError(404, 'Course not found');
+    await this.courseRepository.deleteCourse(id);
   }
 }

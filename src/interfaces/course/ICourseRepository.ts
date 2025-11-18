@@ -5,8 +5,8 @@ import { ICourse } from "./ICourse";
 export interface ICourseRepository {
  getCourses(params?: {
     search?: string;
-    categories?: string[];
-    price?: string[]; // 'free' | 'paid'
+    category?: string;
+    price?: string; // 'free' | 'paid'
     sort?: string; // 'price-asc' | 'price-desc'
     page?: number;
     limit?: number;
@@ -18,7 +18,9 @@ export interface ICourseRepository {
   }>;
 getCourse(id: string): Promise<ICourse | null>;
 getCoursesByInstructorId(instructorId: string): Promise<ICourse[]>
-getCourseForAdminById(id: string): Promise<ICourse | null>
+getCoursesForAdmin(): Promise<ICourse[]>
+getCoursesByCategoryId(categoryId: string): Promise<ICourse[]>;
+getCoursesByQuizsetId(quizsetId: string): Promise<ICourse[]>
   createCourse(data: Partial<ICourse>): Promise<ICourse>;
   updateCourse(id: string, data: Partial<ICourse>): Promise<ICourse | null>;
   deleteCourse(id: string): Promise<void>;

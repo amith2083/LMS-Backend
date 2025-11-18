@@ -1,29 +1,24 @@
-import { Router } from "express";
-
-import { LessonController } from "../controllers/lessonController";
-import { asyncHandler } from "../utils/asyncHandler";
-import { LessonService } from "../services/lessonService";
-import { LessonRepository } from "../repositories/lessonRepository";
-import { ModuleRepository } from "../repositories/moduleRepository";
+// src/routes/lessonRoute.ts
+import { Router } from 'express';
+import { asyncHandler } from '../utils/asyncHandler';
+import { LessonController } from '../controllers/lessonController';
+import { LessonService } from '../services/lessonService';
+import { LessonRepository } from '../repositories/lessonRepository';
+import { ModuleRepository } from '../repositories/moduleRepository';
 
 const router = Router();
 
-// Dependency Injection
 const lessonRepo = new LessonRepository();
 const moduleRepo = new ModuleRepository();
-const lessonService = new LessonService(lessonRepo,moduleRepo);
+const lessonService = new LessonService(lessonRepo, moduleRepo);
 const lessonController = new LessonController(lessonService);
 
-// Routes
-router.post("/", asyncHandler((req, res) => lessonController.createLesson(req, res))); 
-router.get("/:id", asyncHandler((req, res) => lessonController.getLesson(req, res)));
-router.get("/slug/:slug", asyncHandler((req, res) => lessonController.getLessonBySlug(req, res)));
-router.put("/:id", asyncHandler((req, res) => lessonController.updateLesson(req, res)));
-// router.patch("/:id/publish", asyncHandler((req, res) => lessonController.changeLessonPublishState(req, res)));
-router.delete("/:id", asyncHandler((req, res) => lessonController.deleteLesson(req, res)));
-router.post("/upload-url", asyncHandler((req, res) => lessonController.getUploadSignedUrl(req, res)));
-router.post("/playback-url", asyncHandler((req, res) => lessonController.getPlaybackSignedUrl(req, res)));
-
-
+router.post('/', asyncHandler(lessonController.createLesson.bind(lessonController)));
+router.get('/:id', asyncHandler(lessonController.getLesson.bind(lessonController)));
+router.get('/slug/:slug', asyncHandler(lessonController.getLessonBySlug.bind(lessonController)));
+router.put('/:id', asyncHandler(lessonController.updateLesson.bind(lessonController)));
+router.delete('/:id', asyncHandler(lessonController.deleteLesson.bind(lessonController)));
+router.post('/upload-url', asyncHandler(lessonController.getUploadSignedUrl.bind(lessonController)));
+router.post('/playback-url', asyncHandler(lessonController.getPlaybackSignedUrl.bind(lessonController)));
 
 export default router;

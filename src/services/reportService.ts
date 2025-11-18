@@ -1,57 +1,58 @@
-import mongoose from "mongoose";
-import { ICourseRepository } from "../interfaces/course/ICourseRepository";
-import { IModuleRepository } from "../interfaces/module/IModuleRepository";
-import { IReportRepository } from "../interfaces/report/IReportRespository";
-import { IReportService } from "../interfaces/report/IReportService";
-import { IReport } from "../interfaces/report/IReport";
+import { AppError } from '../utils/asyncHandler';
+import { IReport } from '../interfaces/report/IReport';
+import { IReportRepository } from '../interfaces/report/IReportRespository';
+import { ICourseRepository } from '../interfaces/course/ICourseRepository';
+import { IModuleRepository } from '../interfaces/module/IModuleRepository';
+import mongoose from 'mongoose';
+import { STATUS_CODES } from '../constants/http';
+import { IReportService } from '../interfaces/report/IReportService';
+
+
 
 export class ReportService implements IReportService {
   constructor(
-    private readonly reportRepository: IReportRepository,
-    private readonly courseRepository: ICourseRepository,
-    private readonly moduleRepository: IModuleRepository
+    private reportRepository: IReportRepository,
+    private courseRepository: ICourseRepository,
+    private moduleRepository: IModuleRepository
   ) {}
 
-  async getReportByCourseAndUser(courseId: string, userId: string): Promise<IReport | null> {
-    return this.reportRepository.getReportByCourseAndUser(courseId,userId);
+  async getReportByCourseAndUser(courseId: string, userId: string): Promise<IReport> {
+    const report = await this.reportRepository.getReportByCourseAndUser(courseId, userId);
+    if (!report) throw new AppError(STATUS_CODES.NOT_FOUND, 'Report not found');
+    return report;
   }
 
   async createWatchReport(data: any): Promise<IReport> {
     let report = await this.reportRepository.getReportByCourseAndUser(data.courseId, data.userId);
     if (!report) {
-      report = await this.reportRepository.create({
-        course: data.courseId,
-        student: data.userId,
-      });
+      report = await this.reportRepository.create({ course: data.courseId, student: data.userId });
     }
 
     report.totalCompletedLessons ??= [];
     report.totalCompletedModules ??= [];
 
-    // Mark lesson as completed
-    if (!report.totalCompletedLessons.includes(data.lessonId)) {
-      report.totalCompletedLessons.push(new mongoose.Types.ObjectId(data.lessonId));
+    const lessonObjId = new mongoose.Types.ObjectId(data.lessonId);
+    const moduleObjId = new mongoose.Types.ObjectId(data.moduleId);
+
+    if (!report.totalCompletedLessons.some(id => id.equals(lessonObjId))) {
+      report.totalCompletedLessons.push(lessonObjId);
     }
 
-    // Check module completion
     const module = await this.moduleRepository.getModule(data.moduleId);
-    if (!module) throw new Error("Module not found");
-    const completedLessonIds = report.totalCompletedLessons.map(String);
-    const isModuleComplete = module.lessonIds.every((l: any) =>
-      completedLessonIds.includes(l.toString())
-    );
-    if (isModuleComplete && !report.totalCompletedModules.includes(data.moduleId)) {
-      report.totalCompletedModules.push(new mongoose.Types.ObjectId(data.moduleId));
+    if (!module) throw new AppError(STATUS_CODES.NOT_FOUND, 'Module not found');
+
+    const completedLessonIds = report.totalCompletedLessons.map(id => id.toString());
+    const isModuleComplete = module.lessonIds.every(l => completedLessonIds.includes(l.toString()));
+    if (isModuleComplete && !report.totalCompletedModules.some(id => id.equals(moduleObjId))) {
+      report.totalCompletedModules.push(moduleObjId);
     }
 
-    // Check course completion
     const course = await this.courseRepository.getCourse(data.courseId);
-    if (!course) throw new Error("Course not found");
+    if (!course) throw new AppError(STATUS_CODES.NOT_FOUND, 'Course not found');
 
     const totalModules = course.modules?.length ?? 0;
-    const completedModules = report.totalCompletedModules?.length ?? 0;
-
-    if (completedModules >= 1 && completedModules === totalModules) {
+    const completedModules = report.totalCompletedModules.length;
+    if (completedModules > 0 && completedModules === totalModules) {
       report.completion_date = new Date();
     }
 

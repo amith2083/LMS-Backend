@@ -1,12 +1,16 @@
-import { IWatch } from "../interfaces/watch/IWatch";
-import { IWatchServiceRepository } from "../interfaces/watch/IWatchRepository";
-import { IWatchService } from "../interfaces/watch/IWatchService";
-import { IReportService } from "../interfaces/report/IReportService";
+import { AppError } from '../utils/asyncHandler';
+import { IWatch } from '../interfaces/watch/IWatch';
+import { IWatchServiceRepository } from '../interfaces/watch/IWatchRepository';
+import { IReportService } from '../interfaces/report/IReportService';
+import { STATUS_CODES } from '../constants/http';
+import { IWatchService } from '../interfaces/watch/IWatchService';
+
+
 
 export class WatchService implements IWatchService {
   constructor(
-    private readonly watchRepository: IWatchServiceRepository,
-    private readonly reportService: IReportService
+    private watchRepository: IWatchServiceRepository,
+    private reportService: IReportService
   ) {}
 
   async getWatch(lessonId: string, moduleId: string, userId: string): Promise<IWatch | null> {
@@ -18,23 +22,26 @@ export class WatchService implements IWatchService {
     lessonId: string,
     moduleId: string,
     userId: string,
-    state: "started" | "completed",
+    state: 'started' | 'completed',
     lastTime: number
   ): Promise<void> {
-    const found = await this.watchRepository.findWatch(lessonId, moduleId, userId);
+    if (!['started', 'completed'].includes(state)) {
+      throw new AppError(STATUS_CODES.BAD_REQUEST, 'Invalid state');
+    }
 
+    const found = await this.watchRepository.findWatch(lessonId, moduleId, userId);
     const watchEntry = { lesson: lessonId, module: moduleId, user: userId, state, lastTime };
 
-    if (state === "started") {
+    if (state === 'started') {
       if (!found) {
         await this.watchRepository.createWatch(watchEntry);
       }
-    } else if (state === "completed") {
+    } else if (state === 'completed') {
       if (!found) {
         await this.watchRepository.createWatch(watchEntry);
         await this.reportService.updateReport(userId, courseId, moduleId, lessonId);
-      } else if (found.state === "started") {
-        await this.watchRepository.updateWatchState(found._id as string, "completed");
+      } else if (found.state === 'started') {
+        await this.watchRepository.updateWatchState(found._id.toString(), 'completed');
         await this.reportService.updateReport(userId, courseId, moduleId, lessonId);
       }
     }

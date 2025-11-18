@@ -38,7 +38,9 @@ const lessonSchema: Schema<ILesson> = new Schema({
     required: true,
     type: Number,
   },
-});
+}, {
+    timestamps: true,
+  });
 
 export const Lesson: Model<ILesson> =
   mongoose.models.Lesson || mongoose.model<ILesson>("Lesson", lessonSchema);

@@ -1,10 +1,10 @@
-
-import mongoose from "mongoose";
-import { IEnrollment } from "../interfaces/enrollment/IEnrollment";
-import { IEnrollmentRepository } from "../interfaces/enrollment/IEnrollmentRepository";
-import { ICourseRepository } from "../interfaces/course/ICourseRepository";
-import { IUserRepository } from "../interfaces/user/IUserRepository";
-import { Enrollment } from "../models/enrollment";
+// src/repositories/enrollmentRepository.ts
+import mongoose from 'mongoose';
+import { IEnrollment } from '../interfaces/enrollment/IEnrollment';
+import { IEnrollmentRepository } from '../interfaces/enrollment/IEnrollmentRepository';
+import { ICourseRepository } from '../interfaces/course/ICourseRepository';
+import { IUserRepository } from '../interfaces/user/IUserRepository';
+import { Enrollment } from '../models/enrollment';
 
 export class EnrollmentRepository implements IEnrollmentRepository {
   constructor(
@@ -17,92 +17,52 @@ export class EnrollmentRepository implements IEnrollmentRepository {
     session.startTransaction();
 
     try {
-      const existingEnrollment = await Enrollment.findOne({
+      const existing = await Enrollment.findOne({
         course: data.course,
         student: data.student,
       }).session(session);
 
-      if (existingEnrollment) {
-        throw new Error("User is already enrolled in this course.");
+      if (existing) {
+        throw new Error('User is already enrolled in this course.');
       }
 
-      const [newEnrollment] = await Enrollment.create(
-        [
-          {
-            ...data,
-            enrollment_date: data.enrollment_date || Date.now(),
-            status: data.status || "not-started",
-          },
-        ],
+      const [enrollment] = await Enrollment.create(
+        [{
+          ...data,
+          enrollment_date: data.enrollment_date || new Date(),
+          status: data.status || 'not-started',
+        }],
         { session }
       );
 
       await session.commitTransaction();
-      session.endSession();
-      return newEnrollment.toObject();
+      return enrollment.toObject();
     } catch (error) {
       await session.abortTransaction();
-      session.endSession();
       throw error;
+    } finally {
+      session.endSession();
     }
   }
 
   async getEnrollment(enrollmentId: string): Promise<IEnrollment | null> {
-    const enrollment = await Enrollment.findById(enrollmentId)
-      .populate("course student")
-      .lean();
-    return enrollment ? enrollment : null;
+    return Enrollment.findById(enrollmentId).populate('course student').lean().exec();
   }
 
   async getEnrollmentsForCourse(courseId: string): Promise<IEnrollment[]> {
-    const enrollments = await Enrollment.find({ course: courseId })
-      .populate("student")
-      .lean();
-    return enrollments;
+    return Enrollment.find({ course: courseId }).populate('student').lean().exec();
   }
-//for getting enrollments for paticular user
+
   async getEnrollmentsForUser(userId: string): Promise<IEnrollment[]> {
-    const enrollments = await Enrollment.find({ student: userId })
-      .populate("course")
-      .lean();
-    return enrollments;
+    return Enrollment.find({ student: userId }).populate('course').lean().exec();
   }
+
   async hasEnrollmentForCourse(courseId: string, studentId: string): Promise<boolean> {
-    const enrollment = await Enrollment.findOne({
-      course: courseId,
-      student: studentId,
-    }).lean();
-
-    return !!enrollment; // returns true if found, false otherwise
+    const enrollment = await Enrollment.findOne({ course: courseId, student: studentId }).lean().exec();
+    return !!enrollment;
   }
 
-  // async updateEnrollment(
-  //   enrollmentId: string,
-  //   data: Partial<IEnrollment>
-  // ): Promise<IEnrollment | null> {
-  //   const updatedEnrollment = await Enrollment.findByIdAndUpdate(enrollmentId, data, {
-  //     new: true,
-  //   })
-  //     .populate("course student")
-  //     .lean();
-  //   return updatedEnrollment ? updatedEnrollment : null;
-  // }
-
-  // async deleteEnrollment(enrollmentId: string): Promise<void> {
-  //   const enrollment = await Enrollment.findByIdAndDelete(enrollmentId);
-  //   if (!enrollment) {
-  //     throw new Error("Enrollment not found or failed to delete");
-  //   }
-  // }
-
-  async findByCourseAndUser(
-    courseId: string,
-    userId: string
-  ): Promise<IEnrollment | null> {
-    const enrollment = await Enrollment.findOne({
-      course: courseId,
-      student: userId,
-    }).lean();
-    return enrollment ? enrollment : null;
+  async findByCourseAndUser(courseId: string, userId: string): Promise<IEnrollment | null> {
+    return Enrollment.findOne({ course: courseId, student: userId }).lean().exec();
   }
 }

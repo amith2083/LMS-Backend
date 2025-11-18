@@ -17,8 +17,10 @@ const courseSchema = new Schema<ICourse>({
   testimonials: [{ type: Schema.Types.ObjectId, ref: "Testimonial" }],
   quizSet: { type: Schema.Types.ObjectId, ref: "Quizset" },
   learning: [{ type: String }],
-  createdOn: { type: Date, default: Date.now },
-  modifiedOn: { type: Date, default: Date.now },
-});
+ 
+},
+ {
+    timestamps: true,
+  });
 
 export const Course = mongoose.model<ICourse>("Course", courseSchema);

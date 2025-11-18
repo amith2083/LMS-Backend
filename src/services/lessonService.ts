@@ -6,6 +6,7 @@ import { IModuleRepository } from "../interfaces/module/IModuleRepository";
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3 } from "../utils/s3";
+import { AppError } from "../utils/asyncHandler";
 
 export class LessonService implements ILessonService {
  private lessonRepository: ILessonRepository;
@@ -18,94 +19,79 @@ export class LessonService implements ILessonService {
     this.lessonRepository = lessonRepository;
     this.moduleRepository = moduleRepository;
   }
-
-  async createLesson(
-    data: Partial<ILesson>,
-    moduleId: string
-  ): Promise<ILesson> {
-    if (!data.title) throw new Error("Lesson title is required");
+async createLesson(data: Partial<ILesson>, moduleId: string): Promise<ILesson> {
+    if (!data.title) throw new AppError(400, 'Lesson title is required');
 
     const existing = await this.lessonRepository.findByTitle(data.title);
-    if (existing) {
-      throw new Error("A lesson with this title already exists.");
-    }
+    if (existing) throw new AppError(409, 'A lesson with this title already exists.');
 
-      const module = await this.moduleRepository.getModule(moduleId);
-  if (!module) throw new Error("Module not found");
-    // Optionally auto-generate slug
-    // if (!data.slug && data.title) {
-    //   data.slug = slugify(data.title, { lower: true, strict: true });
-    // }
+    const module = await this.moduleRepository.getModule(moduleId);
+    if (!module) throw new AppError(404, 'Module not found');
 
-    const lesson  = await this.lessonRepository.createLesson(data, moduleId);
-      module.lessonIds.push(lesson._id);
-      await this.moduleRepository.saveModule(module);
-return lesson;
-      
+    const lesson = await this.lessonRepository.createLesson(data, moduleId);
+    module.lessonIds.push(lesson._id);
+    await this.moduleRepository.saveModule(module);
+
+    return lesson;
   }
 
-  async getLesson(lessonId: string): Promise<ILesson | null> {
+  async getLesson(lessonId: string): Promise<ILesson> {
     const lesson = await this.lessonRepository.getLesson(lessonId);
-    if (!lesson) throw new Error("Lesson not found");
+    if (!lesson) throw new AppError(404, 'Lesson not found');
     return lesson;
   }
-    async getLessonBySlug(slug: string): Promise<ILesson | null> {
+
+  async getLessonBySlug(slug: string): Promise<ILesson> {
     const lesson = await this.lessonRepository.getLessonBySlug(slug);
-    if (!lesson) throw new Error("Lesson not found");
+    if (!lesson) throw new AppError(404, 'Lesson not found');
     return lesson;
   }
 
-  async updateLesson(
-    lessonId: string,
-    data: Partial<ILesson>
-  ): Promise<ILesson | null> {
-    return this.lessonRepository.updateLesson(lessonId, data);
+  async updateLesson(lessonId: string, data: Partial<ILesson>): Promise<ILesson | null> {
+    const updated = await this.lessonRepository.updateLesson(lessonId, data);
+    if (!updated) throw new AppError(404, 'Lesson not found');
+    return updated;
   }
-
-  // async changeLessonPublishState(lessonId: string): Promise<boolean> {
-  //   return this.lessonRepository.changeLessonPublishState(lessonId);
-  // }
 
   async deleteLesson(lessonId: string, moduleId: string): Promise<void> {
-   const module = await this.moduleRepository.getModule(moduleId);
-  if (!module) throw new Error("Module not found");
+    const module = await this.moduleRepository.getModule(moduleId);
+    if (!module) throw new AppError(404, 'Module not found');
 
-  // Remove the lesson ID from the module
-  // module.lessonIds = module.lessonIds.filter(id => id.toString() !== lessonId);
-  
-  module.lessonIds = module.lessonIds.filter(id => !id.equals(lessonId));
-  await this.moduleRepository.saveModule(module); // Save the updated module
+    module.lessonIds = module.lessonIds.filter(id => !id.equals(lessonId));
+    await this.moduleRepository.saveModule(module);
 
-  await this.lessonRepository.deleteLesson(lessonId);
-}
-async getUploadSignedUrl(fileName: string, fileType: string) {
-  if (!fileName || !fileType || !fileType.startsWith("video/")) {
-    throw new Error("Invalid fileName or fileType");
+    await this.lessonRepository.deleteLesson(lessonId);
   }
 
-  const extension = fileName.split(".").pop();
-  const key = `course-videos/${nanoid()}.${extension}`;
-  const command = new PutObjectCommand({
-    Bucket: process.env.AWS_S3_BUCKET_NAME!,
-    Key: key,
-    ContentType: fileType,
-  });
+  async getUploadSignedUrl(fileName: string, fileType: string) {
+    if (!fileName || !fileType || !fileType.startsWith('video/')) {
+      throw new AppError(400, 'Invalid fileName or fileType');
+    }
 
-  const signedUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
-  const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    const extension = fileName.split('.').pop()!;
+    const key = `course-videos/${nanoid()}.${extension}`;
+    const command = new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME!,
+      Key: key,
+      ContentType: fileType,
+    });
 
-  return { signedUrl, fileUrl, key };
-}
-async getPlaybackSignedUrl(key: string) {
-  if (!key) throw new Error("Missing key");
+    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
+    const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
-  const command = new GetObjectCommand({
-    Bucket: process.env.AWS_S3_BUCKET_NAME!,
-    Key: key,
-  });
+    return { signedUrl, fileUrl, key };
+  }
 
-  const signedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
-  return { signedUrl };
-}
+  async getPlaybackSignedUrl(key: string) {
+    if (!key) throw new AppError(400, 'Missing key');
+
+    const command = new GetObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME!,
+      Key: key,
+    });
+
+    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    return { signedUrl };
+  }
 
 }
