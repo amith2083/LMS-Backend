@@ -72,7 +72,7 @@ async getCoursesByQuizsetId(quizsetId: string): Promise<ICourse[]> {
 
   async getCoursesByInstructorId(instructorId: string): Promise<ICourse[]> {
     return await Course.find({ instructor: instructorId })
-      .populate('instructor category modules')
+      .populate('instructor category modules').sort({ createdOn: -1 })
       .lean();
   }
 

@@ -2,16 +2,18 @@
 import { Router } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { QuizsetController } from '../controllers/quizController';
-import { QuizsetService } from '../services/quizService';
-import { QuizsetRepository } from '../repositories/quizRepository';
+import { QuizService } from '../services/quizService';
+import { QuizsetRepository } from '../repositories/quizsetRepository';
 import { CourseRepository } from '../repositories/courseRepository';
+import { QuizRepository } from '../repositories/quizRepository';
 
 const router = Router();
 
 // DI
 const courseRepo = new CourseRepository();
 const quizsetRepo = new QuizsetRepository();
-const quizsetService = new QuizsetService(quizsetRepo, courseRepo);
+const quizRepo = new QuizRepository();
+const quizsetService = new QuizService(quizsetRepo, courseRepo,quizRepo);
 const quizsetController = new QuizsetController(quizsetService);
 
 // Routes
@@ -19,9 +21,11 @@ router.get('/', asyncHandler(quizsetController.getQuizsets.bind(quizsetControlle
 router.get('/:id', asyncHandler(quizsetController.getQuizsetById.bind(quizsetController)));
 router.post('/', asyncHandler(quizsetController.createQuizset.bind(quizsetController)));
 router.put('/:id', asyncHandler(quizsetController.updateQuizset.bind(quizsetController)));
-router.delete('/:id', asyncHandler(quizsetController.deleteQuizset.bind(quizsetController)));
-router.post('/:id/quiz', asyncHandler(quizsetController.addQuizToQuizset.bind(quizsetController)));
-router.delete('/:quizsetId/quiz/:quizId', asyncHandler(quizsetController.deleteQuizFromQuizset.bind(quizsetController)));
 router.put('/:id/toggle', asyncHandler(quizsetController.togglePublishQuizset.bind(quizsetController)));
+router.delete('/:id', asyncHandler(quizsetController.deleteQuizset.bind(quizsetController)));
+//upto quizset operations------------------------------------------------------------------------------------------------------------
+router.post('/:id/quiz', asyncHandler(quizsetController.createQuiz.bind(quizsetController)));
+router.delete('/:quizsetId/quiz/:quizId', asyncHandler(quizsetController.removeQuizFromQuizset.bind(quizsetController)));
+
 
 export default router;

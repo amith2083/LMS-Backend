@@ -1,20 +1,23 @@
 import { AppError } from '../utils/asyncHandler';
 import { IQuizset } from '../interfaces/quiz/IQuizset';
-import { IQuizsetRepository } from '../interfaces/quiz/IQuizRepository';
+
 import { ICourseRepository } from '../interfaces/course/ICourseRepository';
 import { getSlug } from '../utils/slug';
 import { STATUS_CODES } from '../constants/http';
-import { IQuizsetService } from '../interfaces/quiz/IQuizService';
+import { IQuizService } from '../interfaces/quiz/IQuizService';
+import { IQuizSetRepository } from '../interfaces/quiz/IQuizsSetRepository';
+import { IQuizRepository } from '../interfaces/quiz/IQuizRepository';
 
 
-export class QuizsetService implements IQuizsetService {
+export class QuizService implements IQuizService {
   constructor(
-    private quizsetRepository: IQuizsetRepository,
-    private courseRepository: ICourseRepository // ← For course check
+    private quizsetRepository: IQuizSetRepository,
+    private courseRepository: ICourseRepository,// ← For course check
+      private quizRepository: IQuizRepository
   ) {}
 
-  async getQuizsets(excludeUnpublished: boolean): Promise<IQuizset[]> {
-    return this.quizsetRepository.getQuizsets(excludeUnpublished);
+  async getQuizsets(): Promise<IQuizset[]> {
+    return this.quizsetRepository.getQuizsets();
   }
 
   async getQuizsetById(id: string): Promise<IQuizset> {
@@ -32,7 +35,7 @@ export class QuizsetService implements IQuizsetService {
     const quizsetData = {
       ...data,
       slug: getSlug(data.title),
-      active: data.active ?? false,
+      
     };
 
     return this.quizsetRepository.createQuizset(quizsetData);
@@ -48,8 +51,22 @@ export class QuizsetService implements IQuizsetService {
     if (!updated) throw new AppError(STATUS_CODES.NOT_FOUND, 'Quizset not found');
     return updated;
   }
+    async changeQuizsetPublishState(quizsetId: string): Promise<boolean> {
+    return this.quizsetRepository.changeQuizsetPublishState(quizsetId);
+  }
+   async deleteQuizset(quizsetId: string): Promise<void> {
+    const quizset = await this.quizsetRepository.getQuizsetById(quizsetId);
+    if (!quizset) throw new AppError(STATUS_CODES.NOT_FOUND, 'Quizset not found');
 
-  async addQuizToQuizset(quizsetId: string, quizData: any): Promise<void> {
+    const courses = await this.courseRepository.getCoursesByQuizsetId(quizsetId);
+    if (courses.length > 0) {
+      throw new AppError(STATUS_CODES.CONFLICT, 'Cannot delete quizset used by courses');
+    }
+
+    await this.quizsetRepository.deleteQuizset(quizsetId);
+  }
+
+  async createQuiz(quizsetId: string, quizData: any): Promise<void> {
     if (!quizData.title) throw new AppError(STATUS_CODES.BAD_REQUEST, 'Quiz title is required');
 
     const transformedQuizData = {
@@ -70,27 +87,20 @@ export class QuizsetService implements IQuizsetService {
       throw new AppError(STATUS_CODES.BAD_REQUEST, 'At least one option must be correct');
     }
 
-    const quizId = await this.quizsetRepository.createQuiz(transformedQuizData);
+    const quizId = await this.quizRepository.createQuiz(transformedQuizData);
     await this.quizsetRepository.addQuizToQuizset(quizsetId, quizId);
   }
 
-  async deleteQuizFromQuizset(quizsetId: string, quizId: string): Promise<void> {
-    await this.quizsetRepository.deleteQuizFromQuizset(quizsetId, quizId);
+  async removeQuizFromQuizset(quizsetId: string, quizId: string): Promise<void> {
+      // Remove quizId reference from quizset
+    await this.quizsetRepository.removeQuizFromQuizset(quizsetId, quizId);
+
+
+      // Delete the quiz itself
+    await this.quizRepository.deleteQuiz(quizId);
   }
 
-  async changeQuizsetPublishState(quizsetId: string): Promise<boolean> {
-    return this.quizsetRepository.changeQuizsetPublishState(quizsetId);
-  }
 
-  async deleteQuizset(quizsetId: string): Promise<void> {
-    const quizset = await this.quizsetRepository.getQuizsetById(quizsetId);
-    if (!quizset) throw new AppError(STATUS_CODES.NOT_FOUND, 'Quizset not found');
 
-    const courses = await this.courseRepository.getCoursesByQuizsetId(quizsetId);
-    if (courses.length > 0) {
-      throw new AppError(STATUS_CODES.CONFLICT, 'Cannot delete quizset used by courses');
-    }
-
-    await this.quizsetRepository.deleteQuizset(quizsetId);
-  }
+ 
 }

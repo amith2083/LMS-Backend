@@ -5,8 +5,10 @@ export interface IQuizsetController {
   getQuizsetById(req: Request, res: Response): Promise<void>;
   createQuizset(req: Request, res: Response): Promise<void>;
   updateQuizset(req: Request, res: Response): Promise<void>;
-  deleteQuizset(req: Request, res: Response): Promise<void>;
-  addQuizToQuizset(req: Request, res: Response): Promise<void>;
-  deleteQuizFromQuizset(req: Request, res: Response): Promise<void>;
   togglePublishQuizset(req: Request, res: Response): Promise<void>;
+  deleteQuizset(req: Request, res: Response): Promise<void>;
+  //upto quizset-----------------------------------------------------------------------------------------------------------------
+  createQuiz(req: Request, res: Response): Promise<void>;
+  removeQuizFromQuizset(req: Request, res: Response): Promise<void>;
+
 }

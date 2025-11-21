@@ -6,6 +6,7 @@ import { IOtpService } from '../interfaces/otp/IOtpService';
 import { STATUS_CODES } from '../constants/http';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import { AppError } from '../utils/asyncHandler';
 
 export class UserController implements IUserController {
   constructor(
