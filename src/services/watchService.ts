@@ -1,6 +1,6 @@
 import { AppError } from '../utils/asyncHandler';
 import { IWatch } from '../interfaces/watch/IWatch';
-import { IWatchServiceRepository } from '../interfaces/watch/IWatchRepository';
+import { IWatchRepository } from '../interfaces/watch/IWatchRepository';
 import { IReportService } from '../interfaces/report/IReportService';
 import { STATUS_CODES } from '../constants/http';
 import { IWatchService } from '../interfaces/watch/IWatchService';
@@ -9,7 +9,7 @@ import { IWatchService } from '../interfaces/watch/IWatchService';
 
 export class WatchService implements IWatchService {
   constructor(
-    private watchRepository: IWatchServiceRepository,
+    private watchRepository: IWatchRepository,
     private reportService: IReportService
   ) {}
 

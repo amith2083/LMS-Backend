@@ -56,7 +56,7 @@ export class CourseRepository implements ICourseRepository {
 
   async getCourse(id: string): Promise<ICourse | null> {
     return await Course.findById(id)
-      .populate('instructor category')
+      .populate('instructor category quizSet')
       .populate({
         path: 'modules',
         populate: { path: 'lessonIds', model: 'Lesson' },
@@ -84,13 +84,28 @@ async getCoursesByQuizsetId(quizsetId: string): Promise<ICourse[]> {
   }
 
   async createCourse(data: Partial<ICourse>): Promise<ICourse> {
-    const course = new Course(data);
-    return await course.save();
+    
+    return await Course.create(data)
   }
 
   async updateCourse(id: string, data: Partial<ICourse>): Promise<ICourse | null> {
     return await Course.findByIdAndUpdate(id, data, { new: true }).lean();
   }
+    async addModuleToCourse(courseId: string, moduleId: string): Promise<void> {
+       const result =await Course.findByIdAndUpdate(
+        courseId,
+        { $addToSet: { modules:moduleId } },
+        { new: true }
+      ).lean();
+      return result
+    }
+     async removeModuleFromCourse(courseId: string, moduleId: string): Promise<void> {
+        await Course.findByIdAndUpdate(
+          courseId,
+          { $pull: { modules: moduleId } },
+          { new: true }
+        );
+      }
 
   async deleteCourse(id: string): Promise<void> {
     await Course.findByIdAndDelete(id);

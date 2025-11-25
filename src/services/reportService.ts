@@ -3,7 +3,6 @@ import { IReport } from '../interfaces/report/IReport';
 import { IReportRepository } from '../interfaces/report/IReportRespository';
 import { ICourseRepository } from '../interfaces/course/ICourseRepository';
 import { IModuleRepository } from '../interfaces/module/IModuleRepository';
-import mongoose from 'mongoose';
 import { STATUS_CODES } from '../constants/http';
 import { IReportService } from '../interfaces/report/IReportService';
 
@@ -18,7 +17,7 @@ export class ReportService implements IReportService {
 
   async getReportByCourseAndUser(courseId: string, userId: string): Promise<IReport> {
     const report = await this.reportRepository.getReportByCourseAndUser(courseId, userId);
-    if (!report) throw new AppError(STATUS_CODES.NOT_FOUND, 'Report not found');
+    // if (!report) throw new AppError(STATUS_CODES.NOT_FOUND, 'Report not found');
     return report;
   }
 
@@ -31,11 +30,10 @@ export class ReportService implements IReportService {
     report.totalCompletedLessons ??= [];
     report.totalCompletedModules ??= [];
 
-    const lessonObjId = new mongoose.Types.ObjectId(data.lessonId);
-    const moduleObjId = new mongoose.Types.ObjectId(data.moduleId);
+     
 
-    if (!report.totalCompletedLessons.some(id => id.equals(lessonObjId))) {
-      report.totalCompletedLessons.push(lessonObjId);
+    if (!report.totalCompletedLessons.some(id => id.equals(data.lessonId))) {
+      report.totalCompletedLessons.push(data.lessonId);
     }
 
     const module = await this.moduleRepository.getModule(data.moduleId);
@@ -43,8 +41,8 @@ export class ReportService implements IReportService {
 
     const completedLessonIds = report.totalCompletedLessons.map(id => id.toString());
     const isModuleComplete = module.lessonIds.every(l => completedLessonIds.includes(l.toString()));
-    if (isModuleComplete && !report.totalCompletedModules.some(id => id.equals(moduleObjId))) {
-      report.totalCompletedModules.push(moduleObjId);
+    if (isModuleComplete && !report.totalCompletedModules.some(id => id.equals(data.moduleId))) {
+      report.totalCompletedModules.push(data.moduleId);
     }
 
     const course = await this.courseRepository.getCourse(data.courseId);

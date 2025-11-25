@@ -2,7 +2,7 @@ import { ILesson } from "./ILesson";
 
 
 export interface ILessonRepository {
-  createLesson(data: Partial<ILesson>, moduleId: string): Promise<ILesson>;
+  createLesson(data: Partial<ILesson>): Promise<string>;
   getLesson(lessonId: string): Promise<ILesson | null>;
   getLessonBySlug(slug: string): Promise<ILesson | null>;
   updateLesson(lessonId: string, data: Partial<ILesson>): Promise<ILesson | null>;

@@ -58,11 +58,11 @@ export class EnrollmentRepository implements IEnrollmentRepository {
   }
 
   async hasEnrollmentForCourse(courseId: string, studentId: string): Promise<boolean> {
-    const enrollment = await Enrollment.findOne({ course: courseId, student: studentId }).lean().exec();
+    const enrollment = await Enrollment.findOne({ course: courseId, student: studentId });
     return !!enrollment;
   }
 
   async findByCourseAndUser(courseId: string, userId: string): Promise<IEnrollment | null> {
-    return Enrollment.findOne({ course: courseId, student: userId }).lean().exec();
+    return await Enrollment.findOne({ course: courseId, student: userId });
   }
 }

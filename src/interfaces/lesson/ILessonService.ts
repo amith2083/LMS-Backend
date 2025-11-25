@@ -2,7 +2,7 @@ import { ILesson } from "./ILesson";
 
 
 export interface ILessonService {
-  createLesson(data: Partial<ILesson>, moduleId: string): Promise<ILesson>;
+  createLesson(data: Partial<ILesson>, moduleId: string): Promise<void>;
   getLesson(lessonId: string): Promise<ILesson | null>;
   getLessonBySlug(slug: string): Promise<ILesson | null>;
   updateLesson(lessonId: string, data: Partial<ILesson>): Promise<ILesson | null>;

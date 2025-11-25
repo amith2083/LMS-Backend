@@ -4,10 +4,10 @@ import { ILessonRepository } from "../interfaces/lesson/ILessonRepository";
 import { Lesson } from "../models/lesson";
 
 export class LessonRepository implements ILessonRepository {
-  async createLesson(data: Partial<ILesson>, moduleId: string): Promise<ILesson> {
+  async createLesson(data: Partial<ILesson>): Promise<string> {
     // Repository doesn't validate moduleId — that's service job
     const lesson = await Lesson.create(data);
-    return lesson.toObject(); // ← Clean plain object, no Mongoose stuff
+    return lesson._id.toString();
   }
 
   async getLesson(lessonId: string): Promise<ILesson | null> {

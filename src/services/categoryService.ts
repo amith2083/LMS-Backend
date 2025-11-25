@@ -11,8 +11,9 @@ import { ICategoryService } from '../interfaces/category/ICategoryService';
 export class CategoryService implements ICategoryService {
   constructor(
     private categoryRepository: ICategoryRepository,
+      private courseRepository: ICourseRepository ,
     private fileUploadService: IFileUploadService,
-    private courseRepository: ICourseRepository // ← Add
+  
   ) {}
 
   async createCategory(data: Partial<ICategory>): Promise<ICategory> {

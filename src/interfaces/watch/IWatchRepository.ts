@@ -1,6 +1,6 @@
 import { IWatch } from "./IWatch";
 
-export interface IWatchServiceRepository {
+export interface IWatchRepository {
   findWatch(
     lessonId: string,
     moduleId: string,

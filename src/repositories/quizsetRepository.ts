@@ -40,12 +40,13 @@ export class QuizsetRepository implements IQuizSetRepository {
 
  
 
-  async addQuizToQuizset(quizsetId: string, quizId: string): Promise<void> {
-    return Quizset.findByIdAndUpdate(
+  async addQuizToQuizset(quizsetId: string, quizId: string,session?: mongoose.ClientSession): Promise<void> {
+     const result =await Quizset.findByIdAndUpdate(
       quizsetId,
       { $addToSet: { quizIds: quizId } },
-      { new: true }
+      { new: true,session }
     ).lean().exec();
+    return result
   }
 
  async removeQuizFromQuizset(quizsetId: string, quizId: string): Promise<void> {

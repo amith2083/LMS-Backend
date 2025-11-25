@@ -1,4 +1,3 @@
-\
 import { Router } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { authenticateToken } from '../middlewares/authenciateToken';

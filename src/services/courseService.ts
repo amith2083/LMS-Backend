@@ -3,13 +3,15 @@ import { ICourseService } from "../interfaces/course/ICourseService";
 import { ICourse } from "../interfaces/course/ICourse";
 import { ICourseRepository } from "../interfaces/course/ICourseRepository";
 import { IFileUploadService } from "../interfaces/file/IFileUploadService";
-import { ICategoryService } from "../interfaces/category/ICategoryService";
+import { ICategoryRepository } from "../interfaces/category/ICategoryRepository";
+
 
 export class CourseService implements ICourseService {
   constructor(
     private courseRepository: ICourseRepository,
-    private fileUploadService: IFileUploadService,
-    private categoryService: ICategoryService
+     private categoryRepository: ICategoryRepository,
+    private fileUploadService: IFileUploadService
+   
   ) {}
 
   async getCourses(params?: {
@@ -22,7 +24,7 @@ export class CourseService implements ICourseService {
   }) {
     // Validate category exists
     if (params?.category) {
-      const cat = await this.categoryService.getCategory(params.category);
+      const cat = await this.categoryRepository.getCategory(params.category);
       if (!cat) throw new AppError(404, "Category not found");
     }
 

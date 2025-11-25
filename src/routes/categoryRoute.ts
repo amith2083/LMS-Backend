@@ -12,10 +12,11 @@ const router = Router();
 
 // DI
 const categoryRepo = new CategoryRepository();
-const fileUploadService = new FileUploadService();
 const courseRepo = new CourseRepository();
+const fileUploadService = new FileUploadService();
 
-const categoryService = new CategoryService(categoryRepo, fileUploadService,courseRepo);
+
+const categoryService = new CategoryService(categoryRepo,courseRepo, fileUploadService);
 const categoryController = new CategoryController(categoryService);
 
 // Routes

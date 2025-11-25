@@ -10,13 +10,12 @@ import { CategoryRepository } from '../repositories/categoryRepository';
 import { CategoryService } from '../services/categoryService';
 
 const router = Router();
-
+const courseRepo = new CourseRepository()
 const categoryRepo = new CategoryRepository();
 const fileUploadService = new FileUploadService();
-const courseRepo = new CourseRepository();
-const categoryService = new CategoryService(categoryRepo, fileUploadService,courseRepo);
 
-const courseService = new CourseService(courseRepo, fileUploadService, categoryService);
+
+const courseService = new CourseService(courseRepo,  categoryRepo,fileUploadService,);
 const courseController = new CourseController(courseService);
 
 router.get('/', asyncHandler(courseController.getCourses.bind(courseController)));

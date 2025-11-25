@@ -14,7 +14,7 @@ import { OtpRepository } from '../repositories/otpRepository';
 import { FileUploadService } from '../services/fileUploadService';
 
 const router = Router();
-router.use(cookieParser());
+
 
 const userRepo = new UserRepository();
 const otpRepo = new OtpRepository();

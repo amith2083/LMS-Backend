@@ -22,7 +22,7 @@ router.post('/', authenticateToken, asyncHandler(enrollmentController.createEnro
 router.post('/confirm', authenticateToken, asyncHandler(enrollmentController.confirmEnrollment.bind(enrollmentController)));
 router.get('/:id', authenticateToken, asyncHandler(enrollmentController.getEnrollment.bind(enrollmentController)));
 router.get('/course/:courseId', authenticateToken, asyncHandler(enrollmentController.getEnrollmentsForCourse.bind(enrollmentController)));
-router.get('/course/:courseId/check', asyncHandler(enrollmentController.hasEnrollmentForCourse.bind(enrollmentController)));
+router.get('/course/:courseId/check', authenticateToken, asyncHandler(enrollmentController.hasEnrollmentForCourse.bind(enrollmentController)));
 router.get('/user/me', authenticateToken, asyncHandler(enrollmentController.getEnrollmentsForUser.bind(enrollmentController)));
 
 export default router;

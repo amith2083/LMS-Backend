@@ -19,7 +19,7 @@ export class LessonService implements ILessonService {
     this.lessonRepository = lessonRepository;
     this.moduleRepository = moduleRepository;
   }
-async createLesson(data: Partial<ILesson>, moduleId: string): Promise<ILesson> {
+async createLesson(data: Partial<ILesson>, moduleId: string): Promise<void> {
     if (!data.title) throw new AppError(400, 'Lesson title is required');
 
     const existing = await this.lessonRepository.findByTitle(data.title);
@@ -28,11 +28,10 @@ async createLesson(data: Partial<ILesson>, moduleId: string): Promise<ILesson> {
     const module = await this.moduleRepository.getModule(moduleId);
     if (!module) throw new AppError(404, 'Module not found');
 
-    const lesson = await this.lessonRepository.createLesson(data, moduleId);
-    module.lessonIds.push(lesson._id);
-    await this.moduleRepository.saveModule(module);
+    const lessonId = await this.lessonRepository.createLesson(data);
+    await this.moduleRepository.addLessonToModule(data.courseId, lessonId)
 
-    return lesson;
+   
   }
 
   async getLesson(lessonId: string): Promise<ILesson> {
@@ -54,12 +53,7 @@ async createLesson(data: Partial<ILesson>, moduleId: string): Promise<ILesson> {
   }
 
   async deleteLesson(lessonId: string, moduleId: string): Promise<void> {
-    const module = await this.moduleRepository.getModule(moduleId);
-    if (!module) throw new AppError(404, 'Module not found');
-
-    module.lessonIds = module.lessonIds.filter(id => !id.equals(lessonId));
-    await this.moduleRepository.saveModule(module);
-
+    await this.moduleRepository.removeLessonFromModule(moduleId, lessonId);
     await this.lessonRepository.deleteLesson(lessonId);
   }
 
