@@ -17,6 +17,6 @@ const reportService = new ReportService(reportRepo, courseRepo, moduleRepo);
 const reportController = new ReportController(reportService);
 
 router.get('/:courseId', authenticateToken, asyncHandler(reportController.getReport.bind(reportController)));
-router.post('/', authenticateToken, asyncHandler(reportController.createWatchReport.bind(reportController)));
+
 
 export default router;

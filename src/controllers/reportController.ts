@@ -14,9 +14,5 @@ export class ReportController implements IReportController {
     res.json(report);
   }
 
-  async createWatchReport(req: Request, res: Response): Promise<void> {
-    const data = { ...req.body, userId: req.user.id };
-    const report = await this.reportService.createWatchReport(data);
-    res.status(201).json(report);
-  }
+ 
 }
