@@ -22,6 +22,8 @@ router.get('/', asyncHandler(courseController.getCourses.bind(courseController))
 router.get('/admin', asyncHandler(courseController.getCoursesForAdmin.bind(courseController)));
 router.get('/:id', asyncHandler(courseController.getCourse.bind(courseController)));
 router.get('/instructor/:instructorId', asyncHandler(courseController.getCoursesByInstructorId.bind(courseController)));
+  router.get("/related/:courseId", asyncHandler(courseController.getRelatedCourses.bind(courseController)));
+
 
 router.post('/', asyncHandler(courseController.createCourse.bind(courseController)));
 router.put('/:id', asyncHandler(courseController.updateCourse.bind(courseController)));

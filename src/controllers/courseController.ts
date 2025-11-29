@@ -44,6 +44,11 @@ export class CourseController implements ICourseController {
     const courses = await this.courseService.getCoursesForAdmin();
     res.json(courses);
   }
+async getRelatedCourses(req: Request, res: Response): Promise<void> {
+  const { courseId } = req.params;
+  const courses = await this.courseService.getRelatedCourses(courseId);
+  res.json(courses);
+}
 
   async createCourse(req: Request, res: Response): Promise<void> {
     const course = await this.courseService.createCourse(req.body);

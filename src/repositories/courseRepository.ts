@@ -70,7 +70,7 @@ export class CourseRepository implements ICourseRepository {
       .lean();
   }
   async getCoursesByCategoryId(categoryId: string): Promise<ICourse[]> {
-  return Course.find({ category: categoryId }).lean().exec();
+  return Course.find({ category: categoryId }).lean();
 }
 async getCoursesByQuizsetId(quizsetId: string): Promise<ICourse[]> {
   return Course.find({ quizSet: quizsetId }).lean().exec();
@@ -88,7 +88,18 @@ async getCoursesByQuizsetId(quizsetId: string): Promise<ICourse[]> {
       .sort({ createdOn: -1 })
       .lean();
   }
-
+async getRelatedCourses(categoryId: string, excludeId: string,):Promise<ICourse> {
+  return Course.find({
+    category: categoryId,
+    _id: { $ne: excludeId },        // ← excludes current course
+    status: true,
+    isApproved: true,
+  })
+    .sort({ createdAt: -1 }) 
+    .limit(6)
+    .populate("instructor category")
+    .lean();
+}
   async createCourse(data: Partial<ICourse>): Promise<ICourse> {
     
     return await Course.create(data)

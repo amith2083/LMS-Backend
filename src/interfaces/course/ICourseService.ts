@@ -19,6 +19,7 @@ getCourses(params?: {
   getCourse(id: string): Promise<ICourse | null>;
    getCoursesByInstructorId(instructorId: string): Promise<ICourse[]>
    getCoursesForAdmin(): Promise<ICourse[]>
+   getRelatedCourses(currentCourseId: string): Promise<ICourse[]>
   createCourse(data: Partial<ICourse>): Promise<ICourse>;
   updateCourse(id: string, data: Partial<ICourse>): Promise<ICourse | null>;
  updateCourseImage(courseId: string, file: Express.Multer.File): Promise<ICourse | null>

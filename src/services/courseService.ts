@@ -48,6 +48,16 @@ export class CourseService implements ICourseService {
     const courses = await this.courseRepository.getCoursesForAdmin();
     return courses;
   }
+  async getRelatedCourses(currentCourseId: string): Promise<ICourse[]> {
+  const currentCourse = await this.courseRepository.getCourse(currentCourseId);
+ 
+  if (!currentCourse || !currentCourse.category) return [];
+
+  return this.courseRepository.getRelatedCourses(
+    currentCourse.category._id.toString(),
+    currentCourseId
+  );
+}
 
   async createCourse(data: Partial<ICourse>): Promise<ICourse> {
     return this.courseRepository.createCourse(data);

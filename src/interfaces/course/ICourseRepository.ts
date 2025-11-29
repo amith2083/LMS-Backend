@@ -19,6 +19,7 @@ export interface ICourseRepository {
   getCoursesForAdmin(): Promise<ICourse[]>;
   getCoursesByCategoryId(categoryId: string): Promise<ICourse[]>;
   getCoursesByQuizsetId(quizsetId: string): Promise<ICourse[]>;
+  getRelatedCourses(categoryId: string, excludeId: string):Promise<ICourse> 
   createCourse(data: Partial<ICourse>): Promise<ICourse>;
   updateCourse(id: string, data: Partial<ICourse>): Promise<ICourse | null>;
   addModuleToCourse(courseId: string, moduleId: string): Promise<void>;
