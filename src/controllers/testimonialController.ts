@@ -8,6 +8,7 @@ export class TestimonialController implements ITestimonialController {
 
   async createTestimonial(req: Request, res: Response): Promise<void> {
     const { courseId } = req.params;
+    
     const { review, rating } = req.body;
 
     const testimonial = await this.testimonialService.createTestimonial(

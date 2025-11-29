@@ -7,5 +7,10 @@ export class TestimonialRepository implements ITestimonialRepository {
   async create(data: Partial<ITestimonial>): Promise<ITestimonial> {
     const testimonial = await Testimonial.create(data);
     return testimonial.toObject();
+
+
   }
+  async findOne(filter: Partial<ITestimonial>): Promise<ITestimonial | null> {
+  return await Testimonial.findOne(filter); 
+}
 }

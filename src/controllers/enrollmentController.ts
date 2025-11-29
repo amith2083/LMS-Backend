@@ -51,7 +51,7 @@ export class EnrollmentController implements IEnrollmentController {
   }
 
   async hasEnrollmentForCourse(req: Request, res: Response): Promise<void> {
-   console.log('aaaaaa',req.params.courseId)
+  
     const hasEnrollment = await this.enrollmentService.hasEnrollmentForCourse(
       req.params.courseId,
       req.user.id

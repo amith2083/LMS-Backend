@@ -10,6 +10,7 @@ const testimonialSchema = new Schema<ITestimonial>(
     rating: {
       type: Number,
       required: true,
+      min: 1, max: 5
     },
     courseId: {
       type: Schema.Types.ObjectId,

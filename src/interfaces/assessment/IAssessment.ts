@@ -1,8 +1,20 @@
-import { Types } from "mongoose";
+import mongoose from "mongoose";
 
-export interface IAssessment {
-  assessments: string[]; // or object[] if you want to store details of each assessment
+export interface IAssessmentOption {
+  option: string;
+  isCorrect: boolean;
+  isSelected: boolean;
+}
+
+export interface IAssessmentItem {
+  quizId: mongoose.Types.ObjectId;
+  attempted: boolean;
+  options: IAssessmentOption[];
+}
+
+export interface IAssessment extends Document {
+  assessments: IAssessmentItem[];
   otherMarks: number;
-  createdOn?: Date;
-  modifiedOn?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

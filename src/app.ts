@@ -19,8 +19,9 @@ import quizRouter from "./routes/quizRoute";
 import enrollmentRouter from "./routes/enrollmentRoute";
 import watchRouter from "./routes/watchRoute";
 import reportRouter from "./routes/reportRoute";
-import testimonialRouter from "./routes/reportRoute";
+import testimonialRouter from "./routes/testimonialRoute";
 import certificateRouter from "./routes/certificateRoute";
+import assessmentRouter from "./routes/assessmentRoute";
 import { AppError } from "./utils/asyncHandler";
 
 dotenv.config();
@@ -49,6 +50,7 @@ app.use("/api/watch", watchRouter);
 app.use("/api/report", reportRouter);
 app.use("/api/testimonial", testimonialRouter);
 app.use("/api/certificate", certificateRouter);
+app.use("/api/assessment", assessmentRouter);
 
 // Centralized error-handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {

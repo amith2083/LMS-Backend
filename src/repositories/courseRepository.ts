@@ -60,6 +60,12 @@ export class CourseRepository implements ICourseRepository {
       .populate({
         path: 'modules',
         populate: { path: 'lessonIds', model: 'Lesson' },
+      }).populate({
+        path: 'quizSet',
+        populate: { path: 'quizIds', model: 'Quiz' },
+      }).populate({
+        path: 'testimonials',
+        populate: { path: 'user', model: 'User' },
       })
       .lean();
   }
@@ -99,6 +105,7 @@ async getCoursesByQuizsetId(quizsetId: string): Promise<ICourse[]> {
       ).lean();
       return result
     }
+
      async removeModuleFromCourse(courseId: string, moduleId: string): Promise<void> {
         await Course.findByIdAndUpdate(
           courseId,

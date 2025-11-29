@@ -25,16 +25,29 @@ export class TestimonialService implements ITestimonialService {
     if (data.rating < 1 || data.rating > 5) {
       throw new AppError(STATUS_CODES.BAD_REQUEST, 'Rating must be between 1 and 5');
     }
+// PREVENT DUPLICATE REVIEW: Check if user already reviewed this course
+  const existingTestimonial = await this.testimonialRepository.findOne({
+    user: userId,
+    courseId: courseId,
+  });
 
+  if (existingTestimonial) {
+    throw new AppError(
+      STATUS_CODES.BAD_REQUEST,
+      'You have already submitted a review for this course'
+    );
+  }
     // Validate course exists
     const course = await this.courseRepository.getCourse(courseId);
     if (!course) throw new AppError(STATUS_CODES.NOT_FOUND, 'Course not found');
+
+    
 
     const testimonial = await this.testimonialRepository.create({
       content: data.review,
       rating: data.rating,
       user: userId,
-      course: courseId,
+      courseId,
     });
 
     // Update course testimonials array
