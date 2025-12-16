@@ -11,7 +11,7 @@ export class ModuleRepository implements IModuleRepository {
   }
 
   async getModule(moduleId: string): Promise<IModule | null> {
-    return await Module.findById(moduleId).populate("lessonIds").lean().exec();
+    return await Module.findById(moduleId).populate("lessonIds").lean();
   }
 
   async updateModule(
@@ -19,8 +19,7 @@ export class ModuleRepository implements IModuleRepository {
     data: Partial<IModule>
   ): Promise<IModule | null> {
     return await Module.findByIdAndUpdate(moduleId, data, { new: true })
-      .lean()
-      .exec();
+      .lean();
   }
  async addLessonToModule(moduleId: string, lessonId: string): Promise<void> {
        const result =await Module.findByIdAndUpdate(
@@ -49,8 +48,7 @@ export class ModuleRepository implements IModuleRepository {
       title: { $regex: new RegExp(`^${title}$`, "i") },
       courseId,
     })
-      .lean()
-      .exec();
+      .lean();
   }
   // async saveModule(module: IModule): Promise<void> {
   //   await (module as any).save();

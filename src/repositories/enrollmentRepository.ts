@@ -1,4 +1,4 @@
-// src/repositories/enrollmentRepository.ts
+
 import mongoose from 'mongoose';
 import { IEnrollment } from '../interfaces/enrollment/IEnrollment';
 import { IEnrollmentRepository } from '../interfaces/enrollment/IEnrollmentRepository';
@@ -50,7 +50,7 @@ export class EnrollmentRepository implements IEnrollmentRepository {
   }
 
   async getEnrollmentsForCourse(courseId: string): Promise<IEnrollment[]> {
-    return Enrollment.find({ course: courseId }).populate('student').lean().exec();
+    return Enrollment.find({ course: courseId }).populate('student').lean();
   }
 
   async getEnrollmentsForUser(userId: string): Promise<IEnrollment[]> {

@@ -1,7 +1,7 @@
 import { IEnrollment } from "./IEnrollment";
 
 export interface IEnrollmentService {
- createEnrollment(data: Partial<IEnrollment>): Promise<IEnrollment | { sessionUrl: string }>
+ createEnrollment(data: Partial<IEnrollment>): Promise<IEnrollment | { clientSecret: string }>
     confirmEnrollment(sessionId: string, userId: string): Promise<IEnrollment>;
   getEnrollment(enrollmentId: string): Promise<IEnrollment | null>;
   getEnrollmentsForCourse(courseId: string): Promise<IEnrollment[]>;

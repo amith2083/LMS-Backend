@@ -11,11 +11,11 @@ export class LessonRepository implements ILessonRepository {
   }
 
   async getLesson(lessonId: string): Promise<ILesson | null> {
-    return await Lesson.findById(lessonId).lean().exec();
+    return await Lesson.findById(lessonId).lean();
   }
 
   async getLessonBySlug(slug: string): Promise<ILesson | null> {
-    return await Lesson.findOne({ slug }).lean().exec();
+    return await Lesson.findOne({ slug }).lean();
   }
 
   async updateLesson(
@@ -23,14 +23,13 @@ export class LessonRepository implements ILessonRepository {
     data: Partial<ILesson>
   ): Promise<ILesson | null> {
     return await Lesson.findByIdAndUpdate(lessonId, data, { new: true })
-      .lean()
-      .exec();
+      .lean();
   }
 
   async deleteLesson(lessonId: string): Promise<void> {
-    const result = await Lesson.findByIdAndDelete(lessonId).exec();
+    const result = await Lesson.findByIdAndDelete(lessonId);
     if (!result) {
-      throw new Error("Lesson not found"); // ← OK here: DB-level error
+      throw new Error("Lesson not found"); // 
     }
   }
 

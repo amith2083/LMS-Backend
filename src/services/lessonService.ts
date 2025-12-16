@@ -7,6 +7,7 @@ import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3 } from "../utils/s3";
 import { AppError } from "../utils/asyncHandler";
+import { getSlug } from "../utils/slug";
 
 export class LessonService implements ILessonService {
  private lessonRepository: ILessonRepository;
@@ -28,8 +29,13 @@ async createLesson(data: Partial<ILesson>, moduleId: string): Promise<void> {
     const module = await this.moduleRepository.getModule(moduleId);
     if (!module) throw new AppError(404, 'Module not found');
 
-    const lessonId = await this.lessonRepository.createLesson(data);
-    await this.moduleRepository.addLessonToModule(data.courseId, lessonId)
+     const lessonData = {
+          ...data,
+          slug: getSlug(data.title),
+        };
+
+    const lessonId = await this.lessonRepository.createLesson(lessonData);
+    await this.moduleRepository.addLessonToModule(moduleId, lessonId)
 
    
   }
@@ -47,6 +53,11 @@ async createLesson(data: Partial<ILesson>, moduleId: string): Promise<void> {
   }
 
   async updateLesson(lessonId: string, data: Partial<ILesson>): Promise<ILesson | null> {
+        if (data?.title){
+          
+          data.slug= getSlug(data.title)
+        
+        }
     const updated = await this.lessonRepository.updateLesson(lessonId, data);
     if (!updated) throw new AppError(404, 'Lesson not found');
     return updated;

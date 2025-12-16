@@ -8,8 +8,9 @@ export class QuizsetController implements IQuizsetController {
   constructor(private quizService: IQuizService) {}
 
   async getQuizsets(req: Request, res: Response): Promise<void> {
+    const instructorId = req.user.id
     
-    const quizsets = await this.quizService.getQuizsets();
+    const quizsets = await this.quizService.getQuizsets(instructorId);
     res.json(quizsets);
   }
 
@@ -19,7 +20,8 @@ export class QuizsetController implements IQuizsetController {
   }
 
   async createQuizset(req: Request, res: Response): Promise<void> {
-    const created = await this.quizService.createQuizset(req.body);
+    const instructorId = req.user.id
+    const created = await this.quizService.createQuizset(req.body,instructorId);
     res.status(STATUS_CODES.CREATED).json(created);
   }
 

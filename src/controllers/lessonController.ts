@@ -23,7 +23,10 @@ export class LessonController implements ILessonController {
   }
 
   async updateLesson(req: Request, res: Response): Promise<void> {
-    const updated = await this.lessonService.updateLesson(req.params.id, req.body);
+    const{id}= req.params
+     
+    const updated = await this.lessonService.updateLesson(id, req.body);
+   
     res.json(updated);
   }
 

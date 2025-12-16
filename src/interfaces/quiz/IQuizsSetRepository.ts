@@ -2,7 +2,7 @@ import { IQuizset } from "./IQuizset";
 
 
 export interface IQuizSetRepository {
-  getQuizsets(): Promise<IQuizset[]>;
+  getQuizsets(instructorId:string): Promise<IQuizset[]>;
   getQuizsetById(id: string): Promise<IQuizset | null>;
   createQuizset(data: Partial<IQuizset>): Promise<IQuizset>;
   updateQuizset(quizsetId: string, data: Partial<IQuizset>): Promise<IQuizset | null>;

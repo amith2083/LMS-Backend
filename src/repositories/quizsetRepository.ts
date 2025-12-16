@@ -5,8 +5,8 @@ import { Quizset } from "../models/quizset";
 import { Quiz } from "../models/quizzes";
 
 export class QuizsetRepository implements IQuizSetRepository {
-  async getQuizsets(): Promise<IQuizset[]> {
-    return Quizset.find().populate("quizIds").lean().exec();
+  async getQuizsets(instructorId:string): Promise<IQuizset[]> {
+    return Quizset.find({instructor:instructorId}).populate("quizIds").lean().exec();
   }
 
   async getQuizsetById(id: string): Promise<IQuizset | null> {

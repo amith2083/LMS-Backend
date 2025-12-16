@@ -16,8 +16,8 @@ export class QuizService implements IQuizService {
       private quizRepository: IQuizRepository
   ) {}
 
-  async getQuizsets(): Promise<IQuizset[]> {
-    return this.quizsetRepository.getQuizsets();
+  async getQuizsets(instructorId:string): Promise<IQuizset[]> {
+    return this.quizsetRepository.getQuizsets(instructorId);
   }
 
   async getQuizsetById(id: string): Promise<IQuizset> {
@@ -26,7 +26,7 @@ export class QuizService implements IQuizService {
     return quizset;
   }
 
-  async createQuizset(data: Partial<IQuizset>): Promise<IQuizset> {
+  async createQuizset(data: Partial<IQuizset>,instructorId:string): Promise<IQuizset> {
     if (!data.title) throw new AppError(STATUS_CODES.BAD_REQUEST, 'Title is required');
 
     const existing = await this.quizsetRepository.findByTitle(data.title);
@@ -35,6 +35,7 @@ export class QuizService implements IQuizService {
     const quizsetData = {
       ...data,
       slug: getSlug(data.title),
+      instructor:instructorId
       
     };
 

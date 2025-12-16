@@ -3,24 +3,15 @@ import Stripe from 'stripe';
 import { IEnrollment } from '../interfaces/enrollment/IEnrollment'; 
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2024-06-20',
+ apiVersion: "2025-08-27.basil",
    appInfo: {
         name: "SKILLSEED",
     }
 });
 
-const CURRENCY = 'usd';
 
-export function formatAmountForStripe(amount: number, currency: string): number {
-  const numberFormat = new Intl.NumberFormat([], {
-    style: 'currency',
-    currency: currency,
-    currencyDisplay: 'symbol',
-  });
-  const parts = numberFormat.formatToParts(0);
-  const zeroDecimalCurrency = !parts.some(part => part.type === 'decimal');
-  return zeroDecimalCurrency ? amount : Math.round(amount * 100);
-}
+
+
 
 export async function createCheckoutSession(
   courseName: string,
@@ -28,22 +19,22 @@ export async function createCheckoutSession(
   metadata: { courseId: string; userId: string }
 ): Promise<Stripe.Checkout.Session> {
   return stripe.checkout.sessions.create({
-    mode: 'payment',
-    submit_type: 'auto',
+    mode: 'payment',//One-time charge (like buying a course)
+    submit_type: 'auto',//Stripe automatically finishes the payment when user click pay button
     line_items: [
       {
         quantity: 1,
         price_data: {
-          currency: CURRENCY,
+          currency: 'usd',
           product_data: {
             name: courseName,
           },
-          unit_amount: formatAmountForStripe(coursePrice, CURRENCY),
+          unit_amount: Math.round(coursePrice * 100),
         },
       },
     ],
 success_url: `${process.env.FRONTEND_URL}/enroll-success?session_id={CHECKOUT_SESSION_ID}&courseId=${metadata.courseId}`,
-    cancel_url: `${process.env.FRONTEND_URL}/courses`, // Adjust to specific course page if needed
+    cancel_url: `${process.env.FRONTEND_URL}/payment-failed?courseId=${metadata.courseId}`, 
     metadata,
     ui_mode: 'hosted',
   });

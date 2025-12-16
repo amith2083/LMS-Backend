@@ -14,6 +14,7 @@ const quizsetSchema = new Schema<IQuizset>({
   slug: {
     type: String,
   },
+   instructor: { type: Schema.Types.ObjectId, ref: "User", required: true },
   quizIds: [{ type: Schema.Types.ObjectId, ref: 'Quiz' }],
   active: {
     type: Boolean,

@@ -6,6 +6,7 @@ import { QuizService } from '../services/quizService';
 import { QuizsetRepository } from '../repositories/quizsetRepository';
 import { CourseRepository } from '../repositories/courseRepository';
 import { QuizRepository } from '../repositories/quizRepository';
+import { authenticateToken } from '../middlewares/authenciateToken';
 
 const router = Router();
 
@@ -17,9 +18,9 @@ const quizsetService = new QuizService(quizsetRepo, courseRepo,quizRepo);
 const quizsetController = new QuizsetController(quizsetService);
 
 // Routes
-router.get('/', asyncHandler(quizsetController.getQuizsets.bind(quizsetController)));
+router.get('/', authenticateToken,asyncHandler(quizsetController.getQuizsets.bind(quizsetController)));
 router.get('/:id', asyncHandler(quizsetController.getQuizsetById.bind(quizsetController)));
-router.post('/', asyncHandler(quizsetController.createQuizset.bind(quizsetController)));
+router.post('/', authenticateToken,asyncHandler(quizsetController.createQuizset.bind(quizsetController)));
 router.put('/:id', asyncHandler(quizsetController.updateQuizset.bind(quizsetController)));
 router.put('/:id/toggle', asyncHandler(quizsetController.togglePublishQuizset.bind(quizsetController)));
 router.delete('/:id', asyncHandler(quizsetController.deleteQuizset.bind(quizsetController)));

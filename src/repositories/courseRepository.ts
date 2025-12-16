@@ -18,7 +18,7 @@ export class CourseRepository implements ICourseRepository {
       price = '',
       sort = '',
       page = 1,
-      limit = 2,
+      limit = 6,
     } = params;
 
     const match: any = { status: true, isApproved: true };
@@ -36,9 +36,11 @@ export class CourseRepository implements ICourseRepository {
 
     const totalCount = await Course.countDocuments(match);
 
-    const sortObj: any = {};
-    if (sort === 'price-asc') sortObj.price = 1;
-    if (sort === 'price-desc') sortObj.price = -1;
+  // Determine sorting
+  const sortObj: any = {};
+  if (sort === 'price-asc') sortObj.price = 1;
+  else if (sort === 'price-desc') sortObj.price = -1;
+  else sortObj.createdAt = -1; // Default: latest courses first;
 
     const skip = (page - 1) * limit;
 
@@ -66,7 +68,7 @@ export class CourseRepository implements ICourseRepository {
       }).populate({
         path: 'testimonials',
         populate: { path: 'user', model: 'User' },
-      })
+      }).sort({ createdOn: -1 })
       .lean();
   }
   async getCoursesByCategoryId(categoryId: string): Promise<ICourse[]> {

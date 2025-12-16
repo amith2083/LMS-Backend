@@ -14,7 +14,7 @@ export class CourseController implements ICourseController {
       price,
       sort = '',
       page = '1',
-      limit = '2',
+      limit = '6',
     } = req.query;
 
     const params = {

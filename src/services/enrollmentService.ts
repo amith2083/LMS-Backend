@@ -4,7 +4,7 @@ import { IEnrollment } from '../interfaces/enrollment/IEnrollment';
 import { IEnrollmentRepository } from '../interfaces/enrollment/IEnrollmentRepository';
 import { ICourseRepository } from '../interfaces/course/ICourseRepository';
 import { IUserRepository } from '../interfaces/user/IUserRepository';
-import { createCheckoutSession, stripe } from '../utils/stripe';
+import {  createCheckoutSession, stripe } from '../utils/stripe';
 import { sendEmails } from '../utils/sendEmails';
 import { STATUS_CODES } from '../constants/http';
 import { IEnrollmentService } from '../interfaces/enrollment/IEnrollmentService';
@@ -17,11 +17,17 @@ export class EnrollmentService implements IEnrollmentService {
     private userRepository: IUserRepository
   ) {}
 
-  async createEnrollment(data: Partial<IEnrollment>): Promise<IEnrollment | { sessionUrl: string }> {
+  async createEnrollment(data: Partial<IEnrollment>): Promise<IEnrollment | { clientSecret: string }> {
     if (!data.course || !data.student || !data.method) {
       throw new AppError(STATUS_CODES.BAD_REQUEST, 'Course, student, and payment method are required');
     }
-
+  const existing = await this.enrollmentRepository.findByCourseAndUser(
+      data.course.toString(),
+      data.student.toString()
+    );
+    if (existing) {
+      throw new AppError(STATUS_CODES.CONFLICT, 'User is already enrolled in this course');
+    }
     const course = await this.courseRepository.getCourse(data.course.toString());
     if (!course) throw new AppError(STATUS_CODES.NOT_FOUND, 'Course not found');
 
@@ -32,24 +38,20 @@ export class EnrollmentService implements IEnrollmentService {
       throw new AppError(STATUS_CODES.BAD_REQUEST, 'Invalid payment method');
     }
 
-    const existing = await this.enrollmentRepository.findByCourseAndUser(
-      data.course.toString(),
-      data.student.toString()
-    );
-    if (existing) {
-      throw new AppError(STATUS_CODES.CONFLICT, 'User is already enrolled in this course');
-    }
+  
 
-    if (course.price === 0 || data.method !== 'stripe') {
-      return this.enrollmentRepository.createEnrollment(data);
-    } else {
+   
       const session = await createCheckoutSession(
         course.title,
         course.price,
+        
         { courseId: data.course.toString(), userId: data.student.toString() }
       );
       return { sessionUrl: session.url! };
-    }
+
+    
+
+    
   }
 
   async confirmEnrollment(sessionId: string, userId: string): Promise<IEnrollment> {
@@ -68,7 +70,7 @@ export class EnrollmentService implements IEnrollmentService {
       student: userId,
       method: 'stripe',
       enrollment_date: new Date(),
-      status: 'not-started',
+      status: 'completed',
     };
 
     const enrollment = await this.enrollmentRepository.createEnrollment(data);

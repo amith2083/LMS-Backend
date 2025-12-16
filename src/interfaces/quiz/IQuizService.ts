@@ -2,9 +2,9 @@ import { IQuizset } from "./IQuizset";
 
 
 export interface IQuizService {
-  getQuizsets(): Promise<IQuizset[]>;
+  getQuizsets(instructorId:string): Promise<IQuizset[]>;
   getQuizsetById(id: string): Promise<IQuizset | null>;
-  createQuizset(data: Partial<IQuizset>): Promise<IQuizset>;
+  createQuizset(data: Partial<IQuizset>,instructorId:string): Promise<IQuizset>;
   updateQuizset(quizsetId: string, data: Partial<IQuizset>): Promise<IQuizset | null>;
     changeQuizsetPublishState(quizsetId: string): Promise<boolean>;
     deleteQuizset(quizsetId: string): Promise<void>;

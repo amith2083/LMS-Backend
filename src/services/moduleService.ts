@@ -50,7 +50,14 @@ export class ModuleService implements IModuleService {
     moduleId: string,
     data: Partial<IModule>
   ): Promise<IModule> {
-    const updated = await this.moduleRepository.updateModule(moduleId, data);
+    
+    if (data?.title){
+      
+      data.slug= getSlug(data.title)
+    
+    }
+    
+    const updated = await this.moduleRepository.updateModule(moduleId,data );
     if (!updated) throw new AppError(404, "Module not found");
     return updated;
   }
