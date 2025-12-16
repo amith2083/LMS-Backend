@@ -60,9 +60,21 @@ export class UserService implements IUserService {
     return { message: 'OTP sent for verification' };
   }
 
-  async updateUser(userId: string, data: Partial<IUser>): Promise<IUser> {
-    if (data.password) {
-      data.password = await bcrypt.hash(data.password, 10);
+  async updateUser(userId: string, data: Partial<IUser>& { oldPassword?: string; newPassword?: string }): Promise<IUser> {
+  
+    if (data.oldPassword) {
+      const user = await this.userRepository.getUserById(userId);
+      if (!user || !user.password) {
+      throw new AppError(STATUS_CODES.BAD_REQUEST, 'User or password not found');
+    }
+      const isMatch = await bcrypt.compare(data.oldPassword, user.password);
+    if (!isMatch) {
+      throw new AppError(STATUS_CODES.BAD_REQUEST, 'Incorrect old password');
+    }
+      data.password = await bcrypt.hash(data.newPassword, 10);
+      // Clean up temporary fields
+    delete (data as any).oldPassword;
+    delete (data as any).newPassword;
     }
     const updated = await this.userRepository.updateUser(userId, data);
     if (!updated) throw new AppError(STATUS_CODES.NOT_FOUND, 'User not found');
