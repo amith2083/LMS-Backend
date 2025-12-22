@@ -44,9 +44,12 @@ export class EnrollmentRepository implements IEnrollmentRepository {
       session.endSession();
     }
   }
+   async getAllEnrollments(): Promise<IEnrollment[] | null> {
+    return Enrollment.find().lean();
+  }
 
   async getEnrollment(enrollmentId: string): Promise<IEnrollment | null> {
-    return Enrollment.findById(enrollmentId).populate('course student').lean().exec();
+    return Enrollment.findById(enrollmentId).populate('course student').lean();
   }
 
   async getEnrollmentsForCourse(courseId: string): Promise<IEnrollment[]> {
@@ -54,7 +57,7 @@ export class EnrollmentRepository implements IEnrollmentRepository {
   }
 
   async getEnrollmentsForUser(userId: string): Promise<IEnrollment[]> {
-    return Enrollment.find({ student: userId }).populate('course').lean().exec();
+    return Enrollment.find({ student: userId }).populate('course').lean();
   }
 
   async hasEnrollmentForCourse(courseId: string, studentId: string): Promise<boolean> {

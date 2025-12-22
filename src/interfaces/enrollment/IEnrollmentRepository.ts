@@ -3,6 +3,7 @@ import { IEnrollment } from "./IEnrollment";
 
 export interface IEnrollmentRepository {
   createEnrollment(data: Partial<IEnrollment>): Promise<IEnrollment>;
+   getAllEnrollments(): Promise<IEnrollment[] | null>
   getEnrollment(enrollmentId: string): Promise<IEnrollment | null>;
   getEnrollmentsForCourse(courseId: string): Promise<IEnrollment[]>;
   getEnrollmentsForUser(userId: string): Promise<IEnrollment[]>;

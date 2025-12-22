@@ -1,4 +1,4 @@
-// src/services/moduleService.ts
+
 import { AppError } from "../utils/asyncHandler";
 import { IModule } from "../interfaces/module/IModule";
 import { IModuleRepository } from "../interfaces/module/IModuleRepository";
