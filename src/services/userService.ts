@@ -103,6 +103,21 @@ export class UserService implements IUserService {
 
   async googleSync(email: string, name: string, image: string): Promise<IUser> {
     let user = await this.userRepository.getUserByEmail(email);
+    // 1. Check if account is blocked
+  // if (user.isBlocked) {
+  //     throw new AppError(
+  //       STATUS_CODES.FORBIDDEN,
+  //       'Your account has been blocked by the admin.'
+  //     );
+  //   }
+
+  //   // 2. Unverified instructor trying to use Google login
+  //   if (user.role === 'instructor' && !user.isVerified) {
+  //     throw new AppError(
+  //       STATUS_CODES.FORBIDDEN,
+  //       'Instructor account not approved by admin. Please use email/password login after approval.'
+  //     );
+  //   }
 
     if (!user) {
       user = await this.userRepository.createUser({
