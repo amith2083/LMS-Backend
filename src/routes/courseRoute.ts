@@ -8,6 +8,7 @@ import { CourseRepository } from '../repositories/courseRepository';
 import { FileUploadService } from '../services/fileUploadService';
 import { CategoryRepository } from '../repositories/categoryRepository';
 import { CategoryService } from '../services/categoryService';
+import { authenticateToken } from '../middlewares/authenciateToken';
 
 const router = Router();
 const courseRepo = new CourseRepository()

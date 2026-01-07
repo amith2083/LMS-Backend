@@ -111,13 +111,13 @@ export class UserService implements IUserService {
   //     );
   //   }
 
-  //   // 2. Unverified instructor trying to use Google login
-  //   if (user.role === 'instructor' && !user.isVerified) {
-  //     throw new AppError(
-  //       STATUS_CODES.FORBIDDEN,
-  //       'Instructor account not approved by admin. Please use email/password login after approval.'
-  //     );
-  //   }
+   // 2. Instructor trying to use Google login
+if (user.role === 'instructor') {
+  throw new AppError(
+    STATUS_CODES.FORBIDDEN,
+    'Instructors cannot sign in using Google. Please use the email and password login method.'
+  );
+}
 
     if (!user) {
       user = await this.userRepository.createUser({

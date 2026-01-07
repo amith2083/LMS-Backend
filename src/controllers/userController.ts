@@ -105,7 +105,7 @@ export class UserController implements IUserController {
     const user = await this.userService.getUserByEmail(email);
 
     const accessToken = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
+      { id: user._id, email: user.email, role: user.role,isBlocked:user.isBlocked },
       process.env.JWT_ACCESS_SECRET!,
       { expiresIn: '50m' }
     );
@@ -113,11 +113,12 @@ export class UserController implements IUserController {
     const refreshToken = jwt.sign(
       { id: user._id, jti: uuidv4() },
       process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: '7d' }
+      { expiresIn: '1d' }
     );
+   
 
-    res.cookie('accessToken', accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 50 * 60 * 1000 });
-    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: 50 * 60 * 1000 });
+    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: 1 * 24 * 60 * 60 * 1000 });
 
     res.json({ message: 'Tokens set' });
   };

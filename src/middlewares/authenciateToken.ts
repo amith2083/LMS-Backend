@@ -2,14 +2,15 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { STATUS_CODES } from "../constants/http";
 import { AppError } from "../utils/asyncHandler";
+import { User } from "../models/user";
 
-export const authenticateToken = (
+export const authenticateToken = async(
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
 
-console.log('req.cookies:', req.cookies);
+
   const accessToken = req.cookies.accessToken 
  
 
@@ -19,9 +20,27 @@ console.log('req.cookies:', req.cookies);
   }
 
   try {
-    const decoded = jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET as string);
+    
+     const decoded = jwt.verify(
+      accessToken,
+      process.env.JWT_ACCESS_SECRET as string
+    ) as { id: string; email:string,role: string,isBlocked:boolean };
     req.user = decoded;
-    console.log('🤗😁',req.user)
+
+
+
+   const user = await User.findById(req.user.id).select("isBlocked role");
+
+   
+
+    if (user.isBlocked) {
+      return next(
+        new AppError(STATUS_CODES.FORBIDDEN, "User blocked by admin")
+      );
+    }
+    
+    
+    
     next();
   } catch (error) {
    return next(new AppError(401, "Invalid or expired access token"));
