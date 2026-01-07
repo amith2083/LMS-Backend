@@ -1,11 +1,8 @@
-
 import { Router } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { upload } from '../middlewares/upload';
 import { loginRateLimiter, refreshRateLimiter } from '../middlewares/csrf';
 import { authenticateToken } from '../middlewares/authenciateToken';
-import cookieParser from 'cookie-parser';
-
 import { UserController } from '../controllers/userController';
 import { UserService } from '../services/userService';
 import { UserRepository } from '../repositories/userRepository';
