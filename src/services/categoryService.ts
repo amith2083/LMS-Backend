@@ -7,6 +7,7 @@ import { ICourseRepository } from '../interfaces/course/ICourseRepository'; // â
 import { STATUS_CODES } from '../constants/http';
 
 import { ICategoryService } from '../interfaces/category/ICategoryService';
+import { ICategoryDocument } from '../models/category';
 
 export class CategoryService implements ICategoryService {
   constructor(
@@ -16,20 +17,20 @@ export class CategoryService implements ICategoryService {
   
   ) {}
 
-  async createCategory(data: Partial<ICategory>): Promise<ICategory> {
-    if (!data.title) {
+  async createCategory(title:string,description:string): Promise<ICategoryDocument> {
+    if (!title) {
       throw new AppError(STATUS_CODES.BAD_REQUEST, 'Category title is required');
     }
 
-    const existing = await this.categoryRepository.findByTitle(data.title);
+    const existing = await this.categoryRepository.findByTitle(title.trim());
     if (existing) {
       throw new AppError(STATUS_CODES.CONFLICT, 'A category with this title already exists');
     }
 
-    return this.categoryRepository.createCategory(data);
+    return this.categoryRepository.createCategory(title,description);
   }
 
-  async updateCategoryImage(categoryId: string, file: Express.Multer.File): Promise<ICategory> {
+  async updateCategoryImage(categoryId: string, file: Express.Multer.File): Promise<ICategoryDocument> {
     if (!file) {
       throw new AppError(STATUS_CODES.BAD_REQUEST, 'Image file is required');
     }
@@ -40,17 +41,17 @@ export class CategoryService implements ICategoryService {
     return updated;
   }
 
-  async getCategories(): Promise<ICategory[]> {
+  async getCategories(): Promise<ICategoryDocument[]> {
     return this.categoryRepository.getCategories();
   }
 
-  async getCategory(id: string): Promise<ICategory> {
+  async getCategory(id: string): Promise<ICategoryDocument> {
     const category = await this.categoryRepository.getCategory(id);
     if (!category) throw new AppError(STATUS_CODES.NOT_FOUND, 'Category not found');
     return category;
   }
 
-  async updateCategory(id: string, data: Partial<ICategory>): Promise<ICategory> {
+  async updateCategory(id: string, data: Partial<ICategory>): Promise<ICategoryDocument> {
     const updated = await this.categoryRepository.updateCategory(id, data);
     if (!updated) throw new AppError(STATUS_CODES.NOT_FOUND, 'Category not found');
     return updated;

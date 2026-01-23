@@ -1,18 +1,52 @@
-import mongoose, { Schema } from "mongoose";
-import { IUser } from "../interfaces/user/IUser";
-import { IOtp } from "../interfaces/otp/IOtp";
+import mongoose, { Schema, Document, model, Types } from "mongoose";
 
-const otpSchema = new Schema<IOtp>({
-  email: { type: String, required: true, unique: true },
-  otp: { type: Number, required: true },
-  expiresAt: { type: Number, required: true },
-  purpose: { type: String, enum: ["verification", "reset"], required: true },
-  userData: { type: Schema.Types.Mixed, required: false },
-}, {
+export interface IOtpDocument extends Document {
+  _id: Types.ObjectId;
+  email: string;
+  otp: number;
+  expiresAt: number;
+  purpose: "verification" | "reset";
+  userData?: Record<string, any>;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const otpSchema = new Schema<IOtpDocument>(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    otp: {
+      type: Number,
+      required: true,
+    },
+    expiresAt: {
+      type: Number,
+      required: true,
+    },
+    purpose: {
+      type: String,
+      enum: ["verification", "reset"],
+      required: true,
+    },
+    userData: {
+      type: Schema.Types.Mixed,
+    },
+  },
+  {
     timestamps: true,
-  });
+  }
+);
 
+// TTL index (auto delete when expiresAt < now)
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+
+
 export const Otp =
-  mongoose.models.Otp || mongoose.model<IOtp>("Otp", otpSchema);
+  mongoose.models.Payout ||
+  model<IOtpDocument>("Otp", otpSchema);

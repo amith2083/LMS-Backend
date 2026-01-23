@@ -1,13 +1,18 @@
-
 import { Request, Response } from 'express';
 import { IQuizsetController } from '../interfaces/quiz/IQuizController';
 import { IQuizService } from '../interfaces/quiz/IQuizService';
 import { STATUS_CODES } from '../constants/http';
 
+import { AppError } from '../utils/asyncHandler';
+
 export class QuizsetController implements IQuizsetController {
   constructor(private quizService: IQuizService) {}
 
   async getQuizsets(req: Request, res: Response): Promise<void> {
+      if (!req.user) {
+        throw new AppError(STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+      }
+       
     const instructorId = req.user.id
     
     const quizsets = await this.quizService.getQuizsets(instructorId);
@@ -20,8 +25,13 @@ export class QuizsetController implements IQuizsetController {
   }
 
   async createQuizset(req: Request, res: Response): Promise<void> {
+      if (!req.user) {
+    throw new AppError(STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+  }
+  const{title}=req.body
+  
     const instructorId = req.user.id
-    const created = await this.quizService.createQuizset(req.body,instructorId);
+    const created = await this.quizService.createQuizset({title},instructorId);
     res.status(STATUS_CODES.CREATED).json(created);
   }
 

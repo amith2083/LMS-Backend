@@ -1,4 +1,3 @@
-
 import { Request, Response } from 'express';
 import { ICategoryController } from '../interfaces/category/ICategoryController';
 import { ICategoryService } from '../interfaces/category/ICategoryService';
@@ -8,7 +7,8 @@ export class CategoryController implements ICategoryController {
   constructor(private categoryService: ICategoryService) {}
 
   async createCategory(req: Request, res: Response): Promise<void> {
-    const category = await this.categoryService.createCategory(req.body);
+  const{title,description}=req.body
+    const category = await this.categoryService.createCategory(title,description);
     res.status(STATUS_CODES.CREATED).json(category);
   }
 

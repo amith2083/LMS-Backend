@@ -1,29 +1,62 @@
+import mongoose, { Schema, Document, model, Types } from "mongoose";
 
-import mongoose, { Schema, model, models } from "mongoose";
-
-export interface IPayout {
-  instructor: mongoose.Types.ObjectId;
-  course: mongoose.Types.ObjectId;
-  enrollment: mongoose.Types.ObjectId;
-  amount: number; // Amount credited to instructor
-  platformFee: number; // Amount kept by platform
-  totalAmount: number; // Full course price
+export interface IPayoutDocument extends Document {
+  _id: Types.ObjectId;
+  instructor: Types.ObjectId;
+  course: Types.ObjectId;
+  enrollment: Types.ObjectId;
+  amount: number;//instructor fee
+  platformFee: number;
+  totalAmount: number;//course price
   status: "pending" | "paid";
   paidAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-const payoutSchema = new Schema<IPayout>(
+const payoutSchema = new Schema<IPayoutDocument>(
   {
-    instructor: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
-    enrollment: { type: Schema.Types.ObjectId, ref: "Enrollment", required: true },
-    amount: { type: Number, required: true }, // instructor's share
-    platformFee: { type: Number, required: true },
-    totalAmount: { type: Number, required: true }, // full price paid
-    status: { type: String, enum: ["pending", "paid"], default: "pending" },
-    paidAt: { type: Date },
+    instructor: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    course: {
+      type: Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
+    },
+    enrollment: {
+      type: Schema.Types.ObjectId,
+      ref: "Enrollment",
+      required: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+    },
+    platformFee: {
+      type: Number,
+      required: true,
+    },
+    totalAmount: {
+      type: Number,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "paid"],
+      default: "pending",
+    },
+    paidAt: {
+      type: Date,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-export const Payout = models.Payout || model<IPayout>("Payout", payoutSchema);
+export const Payout =
+  mongoose.models.Payout ||
+  model<IPayoutDocument>("Payout", payoutSchema);

@@ -1,32 +1,56 @@
+import mongoose, { Schema, Document, model, Types } from "mongoose";
 
-import mongoose, { Schema, Model } from "mongoose";
-import { IQuiz } from "../interfaces/quiz/IQuiz";
+export interface IQuizOption {
+  text: string;
+  is_correct: boolean;
+}
 
-const quizzesSchema: Schema<IQuiz> = new Schema({
-  title: {
-    required: true,
-    type: String,
+export interface IQuizDocument extends Document {
+  _id: Types.ObjectId;
+  title: string;
+  description?: string;
+  slug?: string;
+  explanations?: string;
+  options?: IQuizOption[];
+  mark: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const quizSchema = new Schema<IQuizDocument>(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+    },
+    slug: {
+      type: String,
+    },
+    explanations: {
+      type: String,
+    },
+    options: [
+  {
+    text: { type: String, required: true },
+    is_correct: { type: Boolean, required: true },
   },
-  description: {
-    type: String,
+],
+      
+    mark: {
+      type: Number,
+      required: true,
+      default: 5,
+    },
   },
-  slug: {
-    type: String,
-  },
-  explanations: {
-    type: String,
-  },
-  options: {
-    type: Array, 
-  },
-  mark: {
-    required: true,
-    default: 5,
-    type: Number,
-  },
-}, {
+  {
     timestamps: true,
-  });
+  }
+);
 
-
-export const Quiz: Model<IQuiz> = mongoose.models.Quiz || mongoose.model<IQuiz>("Quiz", quizzesSchema);
+export const Quiz =
+  mongoose.models.Quiz ||
+  model<IQuizDocument>("Quiz", quizSchema);

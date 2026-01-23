@@ -1,10 +1,11 @@
 
 import { AppError } from "../utils/asyncHandler";
-import { IModule } from "../interfaces/module/IModule";
+
 import { IModuleRepository } from "../interfaces/module/IModuleRepository";
 import { IModuleService } from "../interfaces/module/IModuleService";
 import { getSlug } from "../utils/slug";
 import { ICourseRepository } from "../interfaces/course/ICourseRepository";
+import { IModule } from "../types/module";
 
 export class ModuleService implements IModuleService {
   constructor(

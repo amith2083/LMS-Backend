@@ -1,11 +1,24 @@
-import mongoose, { Schema, Model } from "mongoose";
-import { IModule } from "../interfaces/module/IModule";
+import mongoose, { Schema, Document, model, Types } from "mongoose";
 
-const moduleSchema = new Schema<IModule>(
+export interface IModuleDocument extends Document {
+  _id: Types.ObjectId;
+  title: string;
+  description?: string;
+  status: boolean;
+  slug: string;
+  courseId: Types.ObjectId;
+  lessonIds: Types.ObjectId[];
+  order: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const moduleSchema = new Schema<IModuleDocument>(
   {
     title: {
       type: String,
       required: true,
+      trim: true,
     },
     description: {
       type: String,
@@ -40,6 +53,6 @@ const moduleSchema = new Schema<IModule>(
   }
 );
 
-
-export const Module: Model<IModule> =
-  mongoose.models.Module || mongoose.model<IModule>("Module", moduleSchema);
+export const Module =
+  mongoose.models.Module ||
+  model<IModuleDocument>("Module", moduleSchema);

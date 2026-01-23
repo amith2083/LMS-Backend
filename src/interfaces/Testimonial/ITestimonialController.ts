@@ -1,5 +1,9 @@
-import { Request, Response } from "express";
+import { Response,Request } from "express";
 
-export class ITestimonialController {
-createTestimonial(req: Request, res: Response): Promise<void>
+
+export interface ITestimonialController {
+  createTestimonial(
+    req: Request,
+    res: Response
+  ): Promise<void>;
 }

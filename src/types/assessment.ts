@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+
 
 export interface IAssessmentOption {
   option: string;
@@ -7,12 +7,12 @@ export interface IAssessmentOption {
 }
 
 export interface IAssessmentItem {
-  quizId: mongoose.Types.ObjectId;
+  quizId: string;
   attempted: boolean;
   options: IAssessmentOption[];
 }
 
-export interface IAssessment extends Document {
+export interface IAssessment  {
   assessments: IAssessmentItem[];
   otherMarks: number;
   createdAt?: Date;

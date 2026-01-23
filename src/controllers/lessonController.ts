@@ -1,4 +1,3 @@
-// src/controllers/lessonController.ts
 import { Request, Response } from 'express';
 import { ILessonController } from '../interfaces/lesson/ILessonController';
 import { ILessonService } from '../interfaces/lesson/ILessonService';
@@ -14,7 +13,7 @@ export class LessonController implements ILessonController {
 
   async getLesson(req: Request, res: Response): Promise<void> {
     const lesson = await this.lessonService.getLesson(req.params.id);
-    res.json(lesson);                     // <-- service already threw 404 if missing
+    res.json(lesson);                    
   }
 
   async getLessonBySlug(req: Request, res: Response): Promise<void> {

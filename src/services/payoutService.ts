@@ -1,7 +1,5 @@
-
 import { IPayoutRepository } from "../interfaces/payout/IPayoutRepository";
 import { IPayoutService } from "../interfaces/payout/IPayoutService";
-import { IPayout } from "../models/payout";
 import { AppError } from "../utils/asyncHandler";
 
 

@@ -1,46 +1,62 @@
-import mongoose, { Schema, Document, Model, Types } from "mongoose";
-import { ILesson } from "../interfaces/lesson/ILesson";
+import mongoose, { Schema, Document, model, Types } from "mongoose";
 
-const lessonSchema: Schema<ILesson> = new Schema({
-  title: {
-    required: true,
-    type: String,
+export interface ILessonDocument extends Document {
+  _id: Types.ObjectId;
+  title: string;
+  description?: string;
+  duration: number;
+  videoKey?: string;
+  active: boolean;
+  slug: string;
+  access: "private" | "public";
+  order: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const lessonSchema = new Schema<ILessonDocument>(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+    },
+    duration: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    videoKey: {
+      type: String,
+    },
+    active: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    slug: {
+      type: String,
+      required: true,
+    },
+    access: {
+      type: String,
+      required: true,
+      enum: ["private", "public"],
+      default: "private",
+    },
+    order: {
+      type: Number,
+      required: true,
+    },
   },
-  description: {
-    required: false,
-    type: String,
-  },
-  duration: {
-    required: true,
-    default: 0,
-    type: Number,
-  },
-  videoKey: {
-    required: false,
-    type: String,
-  },
-  active: {
-    required: true,
-    default: false,
-    type: Boolean,
-  },
-  slug: {
-    required: true,
-    type: String,
-  },
-  access: {
-    required: true,
-    default: "private",
-    type: String,
-    enum: ["private", "public"], // optional: enforce allowed values
-  },
-  order: {
-    required: true,
-    type: Number,
-  },
-}, {
+  {
     timestamps: true,
-  });
+  }
+);
 
-export const Lesson: Model<ILesson> =
-  mongoose.models.Lesson || mongoose.model<ILesson>("Lesson", lessonSchema);
+export const Lesson =
+  mongoose.models.Lesson ||
+  model<ILessonDocument>("Lesson", lessonSchema);

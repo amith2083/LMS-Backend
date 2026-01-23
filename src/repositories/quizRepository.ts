@@ -19,6 +19,6 @@ export class QuizRepository implements IQuizRepository {
  
 
     async deleteQuiz(id: string): Promise<void> {
-    await Quiz.findByIdAndDelete(id).exec();
+    await Quiz.findByIdAndDelete(id);
   }
 }

@@ -1,6 +1,8 @@
-import { ICourse } from "./ICourse";
+import { CreateCourseResponseDTO, UpdateCourseImageResponse, UpdateCourseResponseDTO } from "../../dtos/courseDto";
+import { ICourseDocument } from "../../models/course";
+import { ICourse } from "../../types/course";
 
-;
+
 
 export interface ICourseService {
 getCourses(params?: {
@@ -11,17 +13,17 @@ getCourses(params?: {
   page?: number;
   limit?: number;
 }): Promise<{
-  courses: ICourse[];
+  courses: ICourseDocument[];
   totalCount: number;
   currentPage: number;
   totalPages: number;
 }>;
-  getCourse(id: string): Promise<ICourse | null>;
-   getCoursesByInstructorId(instructorId: string): Promise<ICourse[]>
-   getCoursesForAdmin(): Promise<ICourse[]>
-   getRelatedCourses(currentCourseId: string): Promise<ICourse[]>
-  createCourse(data: Partial<ICourse>): Promise<ICourse>;
-  updateCourse(id: string, data: Partial<ICourse>): Promise<ICourse | null>;
- updateCourseImage(courseId: string, file: Express.Multer.File): Promise<ICourse | null>
+  getCourse(id: string): Promise<ICourseDocument | null>;
+   getCoursesByInstructorId(instructorId: string): Promise<ICourseDocument[]>
+   getCoursesForAdmin(): Promise<ICourseDocument[]>
+   getRelatedCourses(currentCourseId: string): Promise<ICourseDocument[]>
+  createCourse(data: Partial<ICourse>): Promise<CreateCourseResponseDTO|null>;
+  updateCourse(id: string, data: Partial<ICourse>): Promise<UpdateCourseResponseDTO | null>;
+ updateCourseImage(courseId: string, file: Express.Multer.File): Promise<UpdateCourseImageResponse>
   deleteCourse(id: string): Promise<void>;
 }

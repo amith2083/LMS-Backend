@@ -20,12 +20,49 @@ const enrollmentService = new EnrollmentService(enrollmentRepo, courseRepo, user
 const enrollmentController = new EnrollmentController(enrollmentService);
 
 // Routes
-router.post('/', authenticateToken, asyncHandler(enrollmentController.createEnrollment.bind(enrollmentController)));
-router.post('/confirm', authenticateToken, asyncHandler(enrollmentController.confirmEnrollment.bind(enrollmentController)));
-router.get('/', authenticateToken, asyncHandler(enrollmentController.getAllEnrollments.bind(enrollmentController)));
-router.get('/:id', authenticateToken, asyncHandler(enrollmentController.getEnrollment.bind(enrollmentController)));
-router.get('/course/:courseId', authenticateToken, asyncHandler(enrollmentController.getEnrollmentsForCourse.bind(enrollmentController)));
-router.get('/course/:courseId/check', authenticateToken, asyncHandler(enrollmentController.hasEnrollmentForCourse.bind(enrollmentController)));
-router.get('/user/me', authenticateToken, asyncHandler(enrollmentController.getEnrollmentsForUser.bind(enrollmentController)));
+// CREATE
+router.post(
+  '/',
+  authenticateToken,
+  asyncHandler(enrollmentController.createEnrollment.bind(enrollmentController))
+);
+
+router.post(
+  '/confirm',
+  authenticateToken,
+  asyncHandler(enrollmentController.confirmEnrollment.bind(enrollmentController))
+);
+
+// READ – specific first
+router.get(
+  '/user',
+  authenticateToken,
+  asyncHandler(enrollmentController.getEnrollmentsForUser.bind(enrollmentController))
+);
+
+router.get(
+  '/course/:courseId/check',
+  authenticateToken,
+  asyncHandler(enrollmentController.hasEnrollmentForCourse.bind(enrollmentController))
+);
+
+router.get(
+  '/course/:courseId',
+  authenticateToken,
+  asyncHandler(enrollmentController.getEnrollmentsForCourse.bind(enrollmentController))
+);
+
+router.get(
+  '/',
+  authenticateToken,
+  asyncHandler(enrollmentController.getAllEnrollments.bind(enrollmentController))
+);
+
+// ❗ DYNAMIC ROUTE LAST
+router.get(
+  '/:id',
+  authenticateToken,
+  asyncHandler(enrollmentController.getEnrollment.bind(enrollmentController))
+);
 
 export default router;

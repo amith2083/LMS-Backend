@@ -4,7 +4,7 @@ import { IEnrollment } from '../interfaces/enrollment/IEnrollment';
 import { IEnrollmentRepository } from '../interfaces/enrollment/IEnrollmentRepository';
 import { ICourseRepository } from '../interfaces/course/ICourseRepository';
 import { IUserRepository } from '../interfaces/user/IUserRepository';
-import { Enrollment } from '../models/enrollment';
+import { Enrollment, IEnrollmentDocument } from '../models/enrollment';
 
 export class EnrollmentRepository implements IEnrollmentRepository {
   constructor(
@@ -12,7 +12,7 @@ export class EnrollmentRepository implements IEnrollmentRepository {
     private userRepository: IUserRepository
   ) {}
 
-  async createEnrollment(data: Partial<IEnrollment>): Promise<IEnrollment> {
+  async createEnrollment(data:IEnrollment): Promise<IEnrollmentDocument> {
     const session = await mongoose.startSession();
     session.startTransaction();
 
@@ -26,7 +26,7 @@ export class EnrollmentRepository implements IEnrollmentRepository {
         throw new Error('User is already enrolled in this course.');
       }
 
-      const [enrollment] = await Enrollment.create(
+      const [created] = await Enrollment.create(
         [{
           ...data,
           enrollment_date: data.enrollment_date || new Date(),
@@ -34,9 +34,19 @@ export class EnrollmentRepository implements IEnrollmentRepository {
         }],
         { session }
       );
-
+const enrollment = await Enrollment.findById(created._id)
+      .populate({
+        path: "course",
+        select: "_id title price",
+      })
+      .populate({
+        path: "student",
+        select: "_id name email",
+      })
+      .session(session)
+      .orFail();
       await session.commitTransaction();
-      return enrollment.toObject();
+      return enrollment;
     } catch (error) {
       await session.abortTransaction();
       throw error;
@@ -44,20 +54,27 @@ export class EnrollmentRepository implements IEnrollmentRepository {
       session.endSession();
     }
   }
-   async getAllEnrollments(): Promise<IEnrollment[] | null> {
-    return Enrollment.find().lean();
+   async getAllEnrollments(): Promise<IEnrollmentDocument[]> {
+    return await Enrollment.find();
   }
 
-  async getEnrollment(enrollmentId: string): Promise<IEnrollment | null> {
-    return Enrollment.findById(enrollmentId).populate('course student').lean();
+  async getEnrollment(enrollmentId: string): Promise<IEnrollmentDocument | null> {
+    return await Enrollment.findById(enrollmentId).populate({
+      path: "course",
+      select: "_id title price",
+    })
+    .populate({
+      path: "student",
+      select: "_id name email",
+    });
   }
 
-  async getEnrollmentsForCourse(courseId: string): Promise<IEnrollment[]> {
-    return Enrollment.find({ course: courseId }).populate('student').lean();
+  async getEnrollmentsForCourse(courseId: string): Promise<IEnrollmentDocument[]> {
+    return Enrollment.find({ course: courseId }).populate('student');
   }
 
-  async getEnrollmentsForUser(userId: string): Promise<IEnrollment[]> {
-    return Enrollment.find({ student: userId }).populate('course').lean();
+  async getEnrollmentsForUser(userId: string): Promise<IEnrollmentDocument[]> {
+    return Enrollment.find({ student: userId }).populate('course');
   }
 
   async hasEnrollmentForCourse(courseId: string, studentId: string): Promise<boolean> {
@@ -65,7 +82,7 @@ export class EnrollmentRepository implements IEnrollmentRepository {
     return !!enrollment;
   }
 
-  async findByCourseAndUser(courseId: string, userId: string): Promise<IEnrollment | null> {
+  async findByCourseAndUser(courseId: string, userId: string): Promise<IEnrollmentDocument| null> {
     return await Enrollment.findOne({ course: courseId, student: userId });
   }
 }

@@ -1,11 +1,12 @@
-import { ITestimonial } from "./ITestimonial";
+import { ITestimonialDocument } from "../../models/testimonial";
+
 
 export interface ITestimonialService {
   createTestimonial(
     data: { review: string; rating: number },
     userId: string,
     courseId: string
-  ): Promise<ITestimonial>;
+  ): Promise<ITestimonialDocument>;
 
   
 }

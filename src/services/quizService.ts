@@ -1,32 +1,32 @@
 import { AppError } from '../utils/asyncHandler';
-import { IQuizset } from '../interfaces/quiz/IQuizset';
-
 import { ICourseRepository } from '../interfaces/course/ICourseRepository';
 import { getSlug } from '../utils/slug';
 import { STATUS_CODES } from '../constants/http';
 import { IQuizService } from '../interfaces/quiz/IQuizService';
 import { IQuizSetRepository } from '../interfaces/quiz/IQuizsSetRepository';
 import { IQuizRepository } from '../interfaces/quiz/IQuizRepository';
+import { IQuizset } from '../types/quizset';
+import { IQuizsetDocument } from '../models/quizset';
 
 
 export class QuizService implements IQuizService {
   constructor(
     private quizsetRepository: IQuizSetRepository,
-    private courseRepository: ICourseRepository,// ← For course check
-      private quizRepository: IQuizRepository
+    private courseRepository: ICourseRepository,
+    private quizRepository: IQuizRepository
   ) {}
 
-  async getQuizsets(instructorId:string): Promise<IQuizset[]> {
-    return this.quizsetRepository.getQuizsets(instructorId);
+  async getQuizsets(instructorId:string): Promise<IQuizsetDocument[]> {
+    return await this.quizsetRepository.getQuizsets(instructorId);
   }
 
-  async getQuizsetById(id: string): Promise<IQuizset> {
+  async getQuizsetById(id: string): Promise<IQuizsetDocument> {
     const quizset = await this.quizsetRepository.getQuizsetById(id);
     if (!quizset) throw new AppError(STATUS_CODES.NOT_FOUND, 'Quizset not found');
     return quizset;
   }
 
-  async createQuizset(data: Partial<IQuizset>,instructorId:string): Promise<IQuizset> {
+  async createQuizset(data: {title:string},instructorId:string): Promise<IQuizsetDocument> {
     if (!data.title) throw new AppError(STATUS_CODES.BAD_REQUEST, 'Title is required');
 
     const existing = await this.quizsetRepository.findByTitle(data.title);
@@ -42,7 +42,7 @@ export class QuizService implements IQuizService {
     return this.quizsetRepository.createQuizset(quizsetData);
   }
 
-  async updateQuizset(quizsetId: string, data: Partial<IQuizset>): Promise<IQuizset> {
+  async updateQuizset(quizsetId: string, data: Partial<IQuizset>): Promise<IQuizsetDocument> {
     if (data.title) {
       const existing = await this.quizsetRepository.findByTitle(data.title, quizsetId);
       if (existing) throw new AppError(STATUS_CODES.CONFLICT, 'A quizset with this title already exists');

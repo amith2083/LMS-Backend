@@ -1,4 +1,4 @@
-// src/controllers/courseController.ts
+
 import { Request, Response } from 'express';
 import { ICourseController } from '../interfaces/course/ICourseController';
 import { ICourseService } from '../interfaces/course/ICourseService';
@@ -12,9 +12,9 @@ export class CourseController implements ICourseController {
       search,
       category,
       price,
-      sort = '',
+      sort,
       page = '1',
-      limit = '6',
+      limit = '8',
     } = req.query;
 
     const params = {
@@ -27,6 +27,7 @@ export class CourseController implements ICourseController {
     };
 
     const result = await this.courseService.getCourses(params);
+  
     res.json(result);
   }
 
@@ -56,7 +57,9 @@ async getRelatedCourses(req: Request, res: Response): Promise<void> {
   }
 
   async updateCourse(req: Request, res: Response): Promise<void> {
-    const updated = await this.courseService.updateCourse(req.params.id, req.body);
+    const{id} =req.params
+ 
+    const updated = await this.courseService.updateCourse(id, req.body);
     res.json(updated);
   }
 

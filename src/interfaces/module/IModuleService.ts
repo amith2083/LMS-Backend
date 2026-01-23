@@ -1,4 +1,5 @@
-import { IModule } from "./IModule";
+import { IModule } from "../../types/module";
+
 
 
 export interface IModuleService {

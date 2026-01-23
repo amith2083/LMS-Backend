@@ -1,8 +1,8 @@
 import { IModuleRepository } from "../interfaces/module/IModuleRepository";
-import { IModule } from "../interfaces/module/IModule";
 import { Course } from "../models/course";
 import { Module } from "../models/module";
 import mongoose from "mongoose";
+import { IModule } from "../types/module";
 
 export class ModuleRepository implements IModuleRepository {
   async createModule(data: Partial<IModule>): Promise<string> {
@@ -11,22 +11,21 @@ export class ModuleRepository implements IModuleRepository {
   }
 
   async getModule(moduleId: string): Promise<IModule | null> {
-    return await Module.findById(moduleId).populate("lessonIds").lean();
+    return await Module.findById(moduleId).populate("lessonIds");
   }
 
   async updateModule(
     moduleId: string,
     data: Partial<IModule>
   ): Promise<IModule | null> {
-    return await Module.findByIdAndUpdate(moduleId, data, { new: true })
-      .lean();
+    return await Module.findByIdAndUpdate(moduleId, data, { new: true });
   }
  async addLessonToModule(moduleId: string, lessonId: string): Promise<void> {
        const result =await Module.findByIdAndUpdate(
         moduleId,
         { $addToSet: { lessonIds:lessonId } },
         { new: true }
-      ).lean();
+      );
       return result
     }
      async removeLessonFromModule(moduleId: string, lessonId: string): Promise<void> {
@@ -47,8 +46,7 @@ export class ModuleRepository implements IModuleRepository {
     return await Module.findOne({
       title: { $regex: new RegExp(`^${title}$`, "i") },
       courseId,
-    })
-      .lean();
+    });
   }
   // async saveModule(module: IModule): Promise<void> {
   //   await (module as any).save();

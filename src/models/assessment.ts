@@ -1,15 +1,55 @@
+import mongoose, { Schema, model, Types } from "mongoose";
 
-import mongoose, { Schema, Document } from "mongoose";
-import { IAssessment } from "../interfaces/assessment/IAssessment";
-
-
-
-const assessmentSchema = new Schema<IAssessment>(
+export interface IAssessmentDocument extends Document {
+  _id: Types.ObjectId;
+  user: Types.ObjectId;
+  course: Types.ObjectId;
+  quizSet: Types.ObjectId;
+  assessments: {
+    quizId: Types.ObjectId;
+    attempted: boolean;
+    options: {
+      option: string;
+      isCorrect: boolean;
+      isSelected: boolean;
+    }[];
+  }[];
+  otherMarks: number;
+  totalScore?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+const assessmentSchema = new Schema<IAssessmentDocument>(
   {
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    course: {
+      type: Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
+    },
+
+    quizSet: {
+      type: Schema.Types.ObjectId,
+      ref: "Quizset",
+      required: true,
+    },
+
     assessments: [
       {
-        quizId: { type: Schema.Types.ObjectId, ref: "Quiz", required: true },
-        attempted: { type: Boolean, required: true },
+        quizId: {
+          type: Schema.Types.ObjectId,
+          ref: "Quiz",
+          required: true,
+        },
+        attempted: {
+          type: Boolean,
+          required: true,
+        },
         options: [
           {
             option: { type: String, required: true },
@@ -19,10 +59,22 @@ const assessmentSchema = new Schema<IAssessment>(
         ],
       },
     ],
-    otherMarks: { type: Number, required: true, default: 0 },
+
+    otherMarks: {
+      type: Number,
+      default: 0,
+    },
+
+    totalScore: {
+      type: Number,
+      default: 0,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 export const Assessment =
-  mongoose.models.Assessment ?? mongoose.model<IAssessment>("Assessment", assessmentSchema);
+  mongoose.models.Assessment ||
+  model<IAssessmentDocument>("Assessment", assessmentSchema);

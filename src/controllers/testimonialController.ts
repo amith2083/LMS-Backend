@@ -3,18 +3,28 @@ import { ITestimonialController } from "../interfaces/Testimonial/ITestimonialCo
 import { ITestimonialService } from "../interfaces/Testimonial/ITestimonialService";
 import { STATUS_CODES } from "../constants/http";
 
+import { AppError } from "../utils/asyncHandler";
+
 export class TestimonialController implements ITestimonialController {
   constructor(private testimonialService: ITestimonialService) {}
 
-  async createTestimonial(req: Request, res: Response): Promise<void> {
+  async createTestimonial(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
     const { courseId } = req.params;
-    
+
     const { review, rating } = req.body;
+      if (!req.user) {
+        throw new AppError(STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+      }
+       const studentId = req.user.id
+   
 
     const testimonial = await this.testimonialService.createTestimonial(
       { review, rating },
-      req.user.id,
-      courseId
+      studentId,
+      courseId,
     );
 
     res.status(STATUS_CODES.CREATED).json(testimonial);

@@ -1,4 +1,3 @@
-// src/controllers/moduleController.ts
 import { Request, Response } from 'express';
 import { IModuleController } from '../interfaces/module/IModuleController';
 import { IModuleService } from '../interfaces/module/IModuleService';
@@ -8,7 +7,8 @@ export class ModuleController implements IModuleController {
   constructor(private moduleService: IModuleService) {}
 
   async createModule(req: Request, res: Response): Promise<void> {
-    const module = await this.moduleService.createModule(req.body);
+  const{title,courseId,order}=req.body
+    const module = await this.moduleService.createModule({title,courseId,order});
     res.status(STATUS_CODES.CREATED).json(module);
   }
 

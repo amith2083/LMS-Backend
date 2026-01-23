@@ -4,20 +4,21 @@ import { ITestimonialService } from '../interfaces/Testimonial/ITestimonialServi
 import { ITestimonialRepository } from '../interfaces/Testimonial/ITestimonialRepository';
 import { ICourseRepository } from '../interfaces/course/ICourseRepository';
 import { STATUS_CODES } from '../constants/http';
-import { ITestimonial } from '../interfaces/Testimonial/ITestimonial';
+import { ITestimonialDocument } from '../models/testimonial';
+
 
 
 export class TestimonialService implements ITestimonialService {
   constructor(
     private testimonialRepository: ITestimonialRepository,
-    private courseRepository: ICourseRepository // ← Use repo, not service
+    private courseRepository: ICourseRepository 
   ) {}
 
   async createTestimonial(
     data: { review: string; rating: number },
     userId: string,
     courseId: string
-  ): Promise<ITestimonial> {
+  ): Promise<ITestimonialDocument> {
     if (!data.review || !data.rating) {
       throw new AppError(STATUS_CODES.BAD_REQUEST, 'Review and rating are required');
     }
@@ -51,9 +52,10 @@ export class TestimonialService implements ITestimonialService {
     });
 
     // Update course testimonials array
-    await this.courseRepository.updateCourse(courseId, {
-      $push: { testimonials: testimonial._id },
-    });
+    await this.courseRepository.addTestimonialToCourse(
+  courseId,
+  testimonial._id.toString()
+);
 
     return testimonial;
   }

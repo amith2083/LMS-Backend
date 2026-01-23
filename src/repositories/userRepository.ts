@@ -1,27 +1,28 @@
 
-import { IUser } from '../interfaces/user/IUser';
 import { IUserRepository } from '../interfaces/user/IUserRepository';
-import { User } from '../models/user';
+import { IUserDocument, User } from '../models/user';
+import { IUser } from '../types/IUser';
+
 
 export class UserRepository implements IUserRepository {
-  async getUsers(): Promise<IUser[]> {
-    return User.find({ role: { $ne: 'admin' } }).lean().exec();
+ async getUsers(): Promise<IUserDocument[]> {
+    return User.find({ role: { $ne: 'admin' } }).select('-password');
   }
 
-  async getUserById(userId: string): Promise<IUser | null> {
-    return User.findById(userId).lean().exec();
+  async getUserById(id: string): Promise<IUserDocument | null> {
+    return User.findById(id);
   }
 
-  async getUserByEmail(email: string): Promise<IUser | null> {
-    return User.findOne({ email }).lean().exec();
+  async getUserByEmail(email: string): Promise<IUserDocument | null> {
+    return await User.findOne({ email });
   }
 
-  async createUser(data: Partial<IUser>): Promise<IUser> {
-    const user = await User.create(data);
-    return user.toObject();
+  async createUser(data: Partial<IUser>): Promise<IUserDocument> {
+    return await User.create(data);
+  
   }
 
-  async updateUser(userId: string, data: Partial<IUser>): Promise<IUser | null> {
-    return User.findByIdAndUpdate(userId, data, { new: true }).lean().exec();
+  async updateUser(userId: string, data: Partial<IUser>): Promise<IUserDocument | null> {
+    return User.findByIdAndUpdate(userId, data, { new: true });
   }
 }

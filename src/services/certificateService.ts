@@ -42,19 +42,19 @@ export class CertificateService {
 
     if (!course) throw new Error("Course not found");
     if (!student) throw new Error("User not found");
-    if (!report || !report.completion_date)
+    if (!report || !report.completionDate)
       throw new Error("Course not completed");
 
-    const completionDate = report.completion_date
-      ? formatMyDate(report.completion_date)
+    const completionDate = report.completionDate
+      ? formatMyDate(report.completionDate)
       : formatMyDate(new Date());
 
     const info = {
       name: `${student.name} `,
       completionDate,
       courseName: course.title,
-      instructorName: `${course.instructor.name}`,
-      instructorDesignation: course.instructor.designation || "Instructor",
+      instructorName: `${course?.instructor?.name}`,
+      instructorDesignation: course?.instructor?.designation || "Instructor",
     };
 
     // ── Generate PDF (same as your old code) ──

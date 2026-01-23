@@ -59,10 +59,11 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   logger.error(err.stack || err.message);
 
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
+     res.status(err.statusCode).json({
       success: false,
       message: err.message,
     });
+    return
   }
 
   res.status(err.status || 500).json({

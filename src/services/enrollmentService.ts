@@ -1,6 +1,4 @@
-
 import { AppError } from '../utils/asyncHandler';
-import { IEnrollment } from '../interfaces/enrollment/IEnrollment';
 import { IEnrollmentRepository } from '../interfaces/enrollment/IEnrollmentRepository';
 import { ICourseRepository } from '../interfaces/course/ICourseRepository';
 import { IUserRepository } from '../interfaces/user/IUserRepository';
@@ -9,6 +7,10 @@ import { sendEmails } from '../utils/sendEmails';
 import { STATUS_CODES } from '../constants/http';
 import { IEnrollmentService } from '../interfaces/enrollment/IEnrollmentService';
 import { IPayoutRepository } from '../interfaces/payout/IPayoutRepository';
+import { IEnrollment } from '../types/enrollment';
+import { Types } from 'mongoose';
+import { ConfirmEnrollmentResponseDTO } from '../dtos/enrollmentDto';
+import { IEnrollmentDocument } from '../models/enrollment';
 
 
 export class EnrollmentService implements IEnrollmentService {
@@ -19,24 +21,24 @@ export class EnrollmentService implements IEnrollmentService {
     private payoutRepository: IPayoutRepository,
   ) {}
 
-  async createEnrollment(data: Partial<IEnrollment>): Promise<IEnrollment | { clientSecret: string }> {
+  async createEnrollment(data: IEnrollment): Promise< { sessionUrl: string }> {
     if (!data.course || !data.student || !data.method) {
       throw new AppError(STATUS_CODES.BAD_REQUEST, 'Course, student, and payment method are required');
     }
   const existing = await this.enrollmentRepository.findByCourseAndUser(
-      data.course.toString(),
-      data.student.toString()
+      data.course,
+      data.student
     );
     if (existing) {
       throw new AppError(STATUS_CODES.CONFLICT, 'User is already enrolled in this course');
     }
-    const course = await this.courseRepository.getCourse(data.course.toString());
+    const course = await this.courseRepository.getCourse(data.course);
     if (!course) throw new AppError(STATUS_CODES.NOT_FOUND, 'Course not found');
 
-    const user = await this.userRepository.getUserById(data.student.toString());
+    const user = await this.userRepository.getUserById(data.student);
     if (!user) throw new AppError(STATUS_CODES.NOT_FOUND, 'User not found');
 
-    if (!['credit-card', 'paypal', 'stripe'].includes(data.method)) {
+    if (![ 'stripe'].includes(data.method)) {
       throw new AppError(STATUS_CODES.BAD_REQUEST, 'Invalid payment method');
     }
 
@@ -45,9 +47,9 @@ export class EnrollmentService implements IEnrollmentService {
    
       const session = await createCheckoutSession(
         course.title,
-        course.price,
+        Number(course.price),
         
-        { courseId: data.course.toString(), userId: data.student.toString() }
+        { courseId: data.course, userId: data.student }
       );
       return { sessionUrl: session.url! };
 
@@ -55,7 +57,7 @@ export class EnrollmentService implements IEnrollmentService {
 
     
   }
-async confirmEnrollment(sessionId: string, userId: string): Promise<IEnrollment> {
+async confirmEnrollment(sessionId: string, userId: string): Promise<IEnrollmentDocument> {
     // Retrieve session with expanded payment data
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ['payment_intent'],
@@ -77,10 +79,10 @@ async confirmEnrollment(sessionId: string, userId: string): Promise<IEnrollment>
     }
 
     // Prevent duplicate processing
-    const existingEnrollment = await this.enrollmentRepository.findByCourseAndUser(courseId, userId);
-    if (existingEnrollment) {
-      return existingEnrollment; // Idempotent
-    }
+    // const existingEnrollment = await this.enrollmentRepository.findByCourseAndUser(courseId, userId);
+    // if (existingEnrollment) {
+    //   return existingEnrollment; // Idempotent
+    // }
 
     const course = await this.courseRepository.getCourse(courseId);
     if (!course) throw new AppError(STATUS_CODES.NOT_FOUND, 'Course not found');
@@ -88,7 +90,7 @@ async confirmEnrollment(sessionId: string, userId: string): Promise<IEnrollment>
     const student = await this.userRepository.getUserById(userId);
     if (!student) throw new AppError(STATUS_CODES.NOT_FOUND, 'Student not found');
 
-    const instructor = course.instructor; // populated or fetched
+    const instructor = course.instructor; 
 
     // Calculate revenue split
     const totalAmount = session.amount_total! / 100; // Stripe uses cents
@@ -97,8 +99,8 @@ async confirmEnrollment(sessionId: string, userId: string): Promise<IEnrollment>
 
     // Create enrollment
     const enrollment = await this.enrollmentRepository.createEnrollment({
-      course: courseId,
-      student: userId,
+      course: new Types.ObjectId(courseId),
+      student: new Types.ObjectId(userId),
       method: 'stripe',
       enrollment_date: new Date(),
       status: 'completed', 
@@ -108,9 +110,9 @@ async confirmEnrollment(sessionId: string, userId: string): Promise<IEnrollment>
     if (this.payoutRepository && instructor) {
       try {
         await this.payoutRepository.createPayout({
-          instructor: instructor._id.toString(),
-          course: courseId,
-          enrollment: enrollment._id.toString(),
+          instructor: (instructor._id.toString()),
+          course: (courseId.toString()),
+          enrollment: (enrollment._id.toString()),
           totalAmount,
           platformFee,
           amount: instructorAmount,
@@ -124,14 +126,14 @@ async confirmEnrollment(sessionId: string, userId: string): Promise<IEnrollment>
       }
     }
 
-    // Send notification emails (fire and forget)
-    if (instructor?.email && student.email) {
+    // Send notification emails 
+    if ( student.email) {
       sendEmails([
-        {
-          to: instructor.email,
-          subject: `New Enrollment: ${course.title}`,
-          message: `Great news! ${student.name} just enrolled in your course "${course.title}". You've earned $${instructorAmount.toFixed(2)}.`,
-        },
+        // {
+        //   to: instructor.email,
+        //   subject: `New Enrollment: ${course.title}`,
+        //   message: `Great news! ${student.name} just enrolled in your course "${course.title}". You've earned $${instructorAmount.toFixed(2)}.`,
+        // },
         {
           to: student.email,
           subject: `Welcome to ${course.title}!`,
@@ -196,26 +198,25 @@ async confirmEnrollment(sessionId: string, userId: string): Promise<IEnrollment>
 
   //   return enrollment;
   // }
- async getAllEnrollments(): Promise<IEnrollment[] |null> {
+ async getAllEnrollments(): Promise<IEnrollmentDocument[] |null> {
     const enrollments = await this.enrollmentRepository.getAllEnrollments();
     if (!enrollments) throw new AppError(STATUS_CODES.NOT_FOUND, 'Enrollments not found');
     return enrollments;
   }
-  async getEnrollment(enrollmentId: string): Promise<IEnrollment> {
+  async getEnrollment(enrollmentId: string): Promise<IEnrollmentDocument> {
     const enrollment = await this.enrollmentRepository.getEnrollment(enrollmentId);
     if (!enrollment) throw new AppError(STATUS_CODES.NOT_FOUND, 'Enrollment not found');
     return enrollment;
   }
 
-  async getEnrollmentsForCourse(courseId: string): Promise<IEnrollment[]> {
+  async getEnrollmentsForCourse(courseId: string): Promise<IEnrollmentDocument[]> {
     const course = await this.courseRepository.getCourse(courseId);
     if (!course) throw new AppError(STATUS_CODES.NOT_FOUND, 'Course not found');
     return this.enrollmentRepository.getEnrollmentsForCourse(courseId);
   }
 
-  async getEnrollmentsForUser(userId: string): Promise<IEnrollment[]> {
-    const user = await this.userRepository.getUserById(userId);
-    if (!user) throw new AppError(STATUS_CODES.NOT_FOUND, 'User not found');
+  async getEnrollmentsForUser(userId: string): Promise<IEnrollmentDocument[]> {
+
     return this.enrollmentRepository.getEnrollmentsForUser(userId);
   }
 

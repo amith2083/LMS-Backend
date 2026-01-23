@@ -1,16 +1,15 @@
 import { ITestimonialRepository } from '../interfaces/Testimonial/ITestimonialRepository';
-import { Testimonial } from '../models/testimonial'
-import { ITestimonial } from '../interfaces/Testimonial/ITestimonial';
-;
+import { ITestimonialDocument, Testimonial } from '../models/testimonial'
+import { ITestimonial } from '../types/testimonial';
 
 export class TestimonialRepository implements ITestimonialRepository {
-  async create(data: Partial<ITestimonial>): Promise<ITestimonial> {
+  async create(data: Partial<ITestimonial>): Promise<ITestimonialDocument> {
     const testimonial = await Testimonial.create(data);
-    return testimonial.toObject();
+    return testimonial;
 
 
   }
-  async findOne(filter: Partial<ITestimonial>): Promise<ITestimonial | null> {
-  return await Testimonial.findOne(filter); 
+  async findOne(data: Partial<ITestimonial>): Promise<ITestimonialDocument | null> {
+  return await Testimonial.findOne(data); 
 }
 }

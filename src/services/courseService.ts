@@ -1,9 +1,12 @@
 import { AppError } from "../utils/asyncHandler";
 import { ICourseService } from "../interfaces/course/ICourseService";
-import { ICourse } from "../interfaces/course/ICourse";
 import { ICourseRepository } from "../interfaces/course/ICourseRepository";
 import { IFileUploadService } from "../interfaces/file/IFileUploadService";
 import { ICategoryRepository } from "../interfaces/category/ICategoryRepository";
+import { ICourseDocument } from "../models/course";
+import { CreateCourseResponseDTO, UpdateCourseImageResponse, UpdateCourseResponseDTO } from "../dtos/courseDto";
+import { mapCourseDocumentToCreateCourseResponDto, mapCourseDocumentToUpdateCourseResponDto } from "../mappers/courseMapper";
+import { ICourse } from "../types/course";
 
 
 export class CourseService implements ICourseService {
@@ -31,48 +34,49 @@ export class CourseService implements ICourseService {
     return this.courseRepository.getCourses(params);
   }
 
-  async getCourse(id: string): Promise<ICourse> {
+  async getCourse(id: string): Promise<ICourseDocument> {
     const course = await this.courseRepository.getCourse(id);
     if (!course) throw new AppError(404, "Course not found");
     return course;
   }
 
-  async getCoursesByInstructorId(instructorId: string): Promise<ICourse[]> {
+  async getCoursesByInstructorId(instructorId: string): Promise<ICourseDocument[]> {
     const courses = await this.courseRepository.getCoursesByInstructorId(
       instructorId
     );
     return courses;
   }
 
-  async getCoursesForAdmin(): Promise<ICourse[]> {
+  async getCoursesForAdmin(): Promise<ICourseDocument[]> {
     const courses = await this.courseRepository.getCoursesForAdmin();
     return courses;
   }
-  async getRelatedCourses(currentCourseId: string): Promise<ICourse[]> {
+  async getRelatedCourses(currentCourseId: string): Promise<ICourseDocument[]> {
   const currentCourse = await this.courseRepository.getCourse(currentCourseId);
  
   if (!currentCourse || !currentCourse.category) return [];
 
-  return this.courseRepository.getRelatedCourses(
+  return await this.courseRepository.getRelatedCourses(
     currentCourse.category._id.toString(),
     currentCourseId
   );
 }
 
-  async createCourse(data: Partial<ICourse>): Promise<ICourse> {
-    return this.courseRepository.createCourse(data);
+  async createCourse(data: Partial<ICourse>): Promise<CreateCourseResponseDTO|null> {
+     const result =await this.courseRepository.createCourse(data);
+     return result ? mapCourseDocumentToCreateCourseResponDto(result):null
   }
 
-  async updateCourse(id: string, data: Partial<ICourse>): Promise<ICourse> {
+  async updateCourse(id: string, data: Partial<ICourse>): Promise<UpdateCourseResponseDTO|null> {
     const updated = await this.courseRepository.updateCourse(id, data);
     if (!updated) throw new AppError(404, "Course not found");
-    return updated;
+    return updated ?mapCourseDocumentToUpdateCourseResponDto(updated):null
   }
 
   async updateCourseImage(
     courseId: string,
     file: Express.Multer.File
-  ): Promise<ICourse> {
+  ): Promise<UpdateCourseImageResponse> {
     if (!file) throw new AppError(400, "Image file is required");
 
     const imageUrl = await this.fileUploadService.uploadFile(
@@ -82,8 +86,15 @@ export class CourseService implements ICourseService {
     const updated = await this.courseRepository.updateCourse(courseId, {
       thumbnail: imageUrl,
     });
-    if (!updated) throw new AppError(404, "Course not found");
-    return updated;
+   
+if (!updated?.thumbnail) {
+  throw new AppError(500, "Course image update failed");
+}
+
+return {
+  _id: updated._id.toString(),
+  thumbnail: updated.thumbnail,
+};
   }
 
   async deleteCourse(id: string): Promise<void> {

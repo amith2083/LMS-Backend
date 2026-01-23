@@ -1,19 +1,19 @@
 import mongoose from "mongoose";
 import { IQuizSetRepository } from "../interfaces/quiz/IQuizsSetRepository";
-import { IQuizset } from "../interfaces/quiz/IQuizset";
-import { Quizset } from "../models/quizset";
+import { IQuizsetDocument, Quizset } from "../models/quizset";
 import { Quiz } from "../models/quizzes";
+import { IQuizset } from "../types/quizset";
 
 export class QuizsetRepository implements IQuizSetRepository {
-  async getQuizsets(instructorId:string): Promise<IQuizset[]> {
-    return Quizset.find({instructor:instructorId}).populate("quizIds").lean().exec();
+  async getQuizsets(instructorId:string): Promise<IQuizsetDocument[]> {
+    return await Quizset.find({instructor:instructorId}).populate("quizIds");
   }
 
-  async getQuizsetById(id: string): Promise<IQuizset | null> {
-    return Quizset.findById(id).populate("quizIds").lean().exec();
+  async getQuizsetById(id: string): Promise<IQuizsetDocument | null> {
+    return await Quizset.findById(id).populate("quizIds");
   }
 
-  async createQuizset(data: Partial<IQuizset>): Promise<IQuizset> {
+  async createQuizset(data: Partial<IQuizset>): Promise<IQuizsetDocument> {
     const quizset = await Quizset.create(data);
     return quizset;
   }
@@ -21,10 +21,8 @@ export class QuizsetRepository implements IQuizSetRepository {
   async updateQuizset(
     quizsetId: string,
     data: Partial<IQuizset>
-  ): Promise<IQuizset | null> {
-    return Quizset.findByIdAndUpdate(quizsetId, data, { new: true })
-      .lean()
-      .exec();
+  ): Promise<IQuizsetDocument | null> {
+    return await Quizset.findByIdAndUpdate(quizsetId, data, { new: true });
   }
   async changeQuizsetPublishState(quizsetId: string): Promise<boolean> {
     const quizset = await Quizset.findById(quizsetId).exec();
@@ -35,7 +33,7 @@ export class QuizsetRepository implements IQuizSetRepository {
   }
 
    async deleteQuizset(id: string): Promise<void> {
-    await Quizset.findByIdAndDelete(id).exec();
+    await Quizset.findByIdAndDelete(id);
   }
 
  
@@ -45,7 +43,7 @@ export class QuizsetRepository implements IQuizSetRepository {
       quizsetId,
       { $addToSet: { quizIds: quizId } },
       { new: true,session }
-    ).lean().exec();
+    );
     return result
   }
 
@@ -54,14 +52,14 @@ export class QuizsetRepository implements IQuizSetRepository {
       quizsetId,
       { $pull: { quizIds: quizId } },
       { new: true }
-    ).exec();
+    );
   }
 
-  async findByTitle(title: string): Promise<IQuizset | null> {
+  async findByTitle(title: string): Promise<IQuizsetDocument | null> {
     const query: any = {
       title: { $regex: `^${title.trim()}$`, $options: "i" },
     };
 
-    return Quizset.findOne(query).lean().exec();
+    return await Quizset.findOne(query);
   }
 }

@@ -4,6 +4,12 @@ import { STATUS_CODES } from "../constants/http";
 import { AppError } from "../utils/asyncHandler";
 import { User } from "../models/user";
 
+
+
+
+
+
+
 export const authenticateToken = async(
   req: Request,
   res: Response,
@@ -31,7 +37,11 @@ export const authenticateToken = async(
 
    const user = await User.findById(req.user.id).select("isBlocked role");
 
-   
+   if (!user) {
+      return next(
+        new AppError(STATUS_CODES.UNAUTHORIZED, "User not found")
+      );
+    }
 
     if (user.isBlocked) {
       return next(

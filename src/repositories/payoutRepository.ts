@@ -1,16 +1,17 @@
 import mongoose from "mongoose";
-import { IPayout, Payout } from "../models/payout";
+import {  IPayoutDocument, Payout } from "../models/payout";
 import { IPayoutRepository } from "../interfaces/payout/IPayoutRepository";
+import { IPayout } from "../types/payout";
 
 export class PayoutRepository implements IPayoutRepository {
-  async createPayout(data: Partial<IPayout>): Promise<IPayout> {
+  async createPayout(data: Partial<IPayout>): Promise<IPayoutDocument> {
     const payout = await Payout.create(data);
     return payout;
   }
 
   async getPendingPayoutsForInstructor(
     instructorId: string
-  ): Promise<IPayout[]> {
+  ): Promise<IPayoutDocument[]> {
     return Payout.find({ instructor: instructorId, status: "pending" })
       .populate("course", "title price")
       .populate("enrollment")

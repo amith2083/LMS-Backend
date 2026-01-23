@@ -1,28 +1,27 @@
-// src/repositories/categoryRepository.ts
 import { ICategory } from '../interfaces/category/ICategory';
 import { ICategoryRepository } from '../interfaces/category/ICategoryRepository';
-import { Category } from '../models/category';
+import { Category, ICategoryDocument } from '../models/category';
 
 export class CategoryRepository implements ICategoryRepository {
-  async getCategories(): Promise<ICategory[]> {
-    return Category.find({}).lean().exec();
+  async getCategories(): Promise<ICategoryDocument[]> {
+    return await Category.find({});
   }
 
-  async getCategory(id: string): Promise<ICategory | null> {
-    return Category.findById(id).lean().exec();
+  async getCategory(id: string): Promise<ICategoryDocument | null> {
+    return await Category.findById(id);
   }
 
-  async createCategory(data: Partial<ICategory>): Promise<ICategory> {
-    const category = await Category.create(data);
-    return category.toObject();
+  async createCategory(title:string,description:string): Promise<ICategoryDocument> {
+    const category = await Category.create({title,description});
+    return category;
   }
 
-  async updateCategory(id: string, data: Partial<ICategory>): Promise<ICategory | null> {
-    return Category.findByIdAndUpdate(id, data, { new: true }).lean().exec();
+  async updateCategory(id: string, data: Partial<ICategory>): Promise<ICategoryDocument | null> {
+    return await Category.findByIdAndUpdate(id, data, { new: true });
   }
 
   async changeCategoryPublishState(id: string): Promise<boolean> {
-    const category = await Category.findById(id).exec();
+    const category = await Category.findById(id);
     if (!category) throw new Error('Category not found');
 
     category.status = !category.status;
@@ -31,12 +30,12 @@ export class CategoryRepository implements ICategoryRepository {
   }
 
   async deleteCategory(id: string): Promise<void> {
-    await Category.findByIdAndDelete(id).exec();
+    await Category.findByIdAndDelete(id);
   }
 
-  async findByTitle(title: string): Promise<ICategory | null> {
-    return Category.findOne({
+  async findByTitle(title: string): Promise<ICategoryDocument | null> {
+    return await Category.findOne({
       title: { $regex: `^${title}$`, $options: 'i' },
-    }).lean().exec();
+    });
   }
 }

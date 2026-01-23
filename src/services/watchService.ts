@@ -1,9 +1,9 @@
 import { AppError } from '../utils/asyncHandler';
-import { IWatch } from '../interfaces/watch/IWatch';
 import { IWatchRepository } from '../interfaces/watch/IWatchRepository';
 import { IReportService } from '../interfaces/report/IReportService';
 import { STATUS_CODES } from '../constants/http';
 import { IWatchService } from '../interfaces/watch/IWatchService';
+import { IWatchDocument } from '../models/watch';
 
 
 
@@ -13,7 +13,7 @@ export class WatchService implements IWatchService {
     private reportService: IReportService
   ) {}
 
-  async getWatch(lessonId: string, moduleId: string, userId: string): Promise<IWatch | null> {
+  async getWatch(lessonId: string, moduleId: string, userId: string): Promise<IWatchDocument | null> {
     return this.watchRepository.findWatch(lessonId, moduleId, userId);
   }
 

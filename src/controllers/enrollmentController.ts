@@ -1,4 +1,3 @@
-// src/controllers/enrollmentController.ts
 import { Request, Response } from 'express';
 import { IEnrollmentController } from '../interfaces/enrollment/IEnrollmentController';
 import { IEnrollmentService } from '../interfaces/enrollment/IEnrollmentService';
@@ -8,15 +7,18 @@ import { AppError } from '../utils/asyncHandler';
 
 
 
+
 export class EnrollmentController implements IEnrollmentController {
   constructor(private enrollmentService: IEnrollmentService) {}
 
   async createEnrollment(req: Request, res: Response): Promise<void> {
-    if (req.user.isBlocked) {
-      throw new AppError(STATUS_CODES.FORBIDDEN, 'User is blocked');
-    }
+      if (!req.user) {
+    throw new AppError(STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+  }
+   const studentId = req.user.id
+    
 
-    const enrollmentData = { ...req.body, student: req.user.id };
+    const enrollmentData = { ...req.body, student: studentId };
     const result = await this.enrollmentService.createEnrollment(enrollmentData);
 
   if ('sessionUrl' in result) {
@@ -26,12 +28,17 @@ export class EnrollmentController implements IEnrollmentController {
     }
   }
 
-  async confirmEnrollment(req: Request, res: Response): Promise<void> {
+  async confirmEnrollment(req:Request, res: Response): Promise<void> {
     const { session_id } = req.body;
     if (!session_id) {
       throw new AppError(STATUS_CODES.BAD_REQUEST, 'Session ID required');
     }
-    const enrollment = await this.enrollmentService.confirmEnrollment(session_id, req.user.id);
+     if (!req.user) {
+    throw new AppError(STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+  }
+    const studenId = req.user.id
+    
+    const enrollment = await this.enrollmentService.confirmEnrollment(session_id, studenId);
     res.status(STATUS_CODES.CREATED).json(enrollment);
   }
   async getAllEnrollments(req: Request, res: Response): Promise<void> {
@@ -49,16 +56,24 @@ export class EnrollmentController implements IEnrollmentController {
     res.json(enrollments);
   }
 
-  async getEnrollmentsForUser(req: Request, res: Response): Promise<void> {
-    const enrollments = await this.enrollmentService.getEnrollmentsForUser(req.user.id);
+  async getEnrollmentsForUser(req:Request, res: Response): Promise<void> {
+      if (!req.user) {
+    throw new AppError(STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+  }
+   const studenId = req.user.id
+    const enrollments = await this.enrollmentService.getEnrollmentsForUser(studenId);
     res.json(enrollments);
   }
 
-  async hasEnrollmentForCourse(req: Request, res: Response): Promise<void> {
+  async hasEnrollmentForCourse(req:Request, res: Response): Promise<void> {
+      if (!req.user) {
+    throw new AppError(STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+  }
+   const studenId = req.user.id
   
     const hasEnrollment = await this.enrollmentService.hasEnrollmentForCourse(
       req.params.courseId,
-      req.user.id
+     studenId
     );
     res.json({ enrolled: hasEnrollment });
   }

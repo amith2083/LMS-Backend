@@ -1,28 +1,40 @@
-import { ICourse } from "./ICourse";
+import { ICourseDocument } from "../../models/course";
+import { ICourse } from "../../types/course";
+
 
 export interface ICourseRepository {
   getCourses(params?: {
     search?: string;
     category?: string;
-    price?: string; // 'free' | 'paid'
-    sort?: string; // 'price-asc' | 'price-desc'
+    price?: string;
+    sort?: string;
     page?: number;
     limit?: number;
   }): Promise<{
-    courses: ICourse[];
+    courses: ICourseDocument[];
     totalCount: number;
     currentPage: number;
     totalPages: number;
   }>;
-  getCourse(id: string): Promise<ICourse | null>;
-  getCoursesByInstructorId(instructorId: string): Promise<ICourse[]>;
-  getCoursesForAdmin(): Promise<ICourse[]>;
-  getCoursesByCategoryId(categoryId: string): Promise<ICourse[]>;
-  getCoursesByQuizsetId(quizsetId: string): Promise<ICourse[]>;
-  getRelatedCourses(categoryId: string, excludeId: string):Promise<ICourse> 
-  createCourse(data: Partial<ICourse>): Promise<ICourse>;
-  updateCourse(id: string, data: Partial<ICourse>): Promise<ICourse | null>;
+  getCourse(id: string): Promise<ICourseDocument | null>;
+  getCoursesByInstructorId(instructorId: string): Promise<ICourseDocument[]>;
+  getCoursesForAdmin(): Promise<ICourseDocument[]>;
+  getCoursesByCategoryId(categoryId: string): Promise<ICourseDocument[]>;
+  getCoursesByQuizsetId(quizsetId: string): Promise<ICourseDocument[]>;
+  getRelatedCourses(
+    categoryId: string,
+    excludeId: string
+  ): Promise<ICourseDocument[]>;
+  createCourse(data: Partial<ICourse>): Promise<ICourseDocument>;
+  updateCourse(
+    id: string,
+    data: Partial<ICourse>
+  ): Promise<ICourseDocument | null>;
+  addTestimonialToCourse(
+  courseId: string,
+  testimonialId: string
+): Promise<void>;
   addModuleToCourse(courseId: string, moduleId: string): Promise<void>;
-  removeModuleFromCourse(courseId: string, moduleId: string): Promise<void>
+  removeModuleFromCourse(courseId: string, moduleId: string): Promise<void>;
   deleteCourse(id: string): Promise<void>;
 }

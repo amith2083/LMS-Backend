@@ -1,16 +1,27 @@
-import mongoose, { Schema, Types } from "mongoose";
-import { ITestimonial } from "../interfaces/Testimonial/ITestimonial";
+import mongoose, { Schema, Document, model, Types } from "mongoose";
 
-const testimonialSchema = new Schema<ITestimonial>(
+export interface ITestimonialDocument extends Document {
+  _id: Types.ObjectId;
+  content: string;
+  rating: number;
+  courseId: Types.ObjectId;
+  user: Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const testimonialSchema = new Schema<ITestimonialDocument>(
   {
     content: {
       type: String,
       required: true,
+      trim: true,
     },
     rating: {
       type: Number,
       required: true,
-      min: 1, max: 5
+      min: 1,
+      max: 5,
     },
     courseId: {
       type: Schema.Types.ObjectId,
@@ -23,9 +34,11 @@ const testimonialSchema = new Schema<ITestimonial>(
       required: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 export const Testimonial =
-  mongoose.models.Testimonial ??
-  mongoose.model<ITestimonial>("Testimonial", testimonialSchema);
+  mongoose.models.Testimonial ||
+  model<ITestimonialDocument>("Testimonial", testimonialSchema);

@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
-import { IModule } from "./IModule";
+import { IModule } from "../../types/module";
+
 
 
 export interface IModuleRepository {
