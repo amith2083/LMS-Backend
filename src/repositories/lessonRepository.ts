@@ -1,7 +1,7 @@
 
 import { ILesson } from "../interfaces/lesson/ILesson";
 import { ILessonRepository } from "../interfaces/lesson/ILessonRepository";
-import { Lesson } from "../models/lesson";
+import { ILessonDocument, Lesson } from "../models/lesson";
 
 export class LessonRepository implements ILessonRepository {
   async createLesson(data: Partial<ILesson>): Promise<string> {
@@ -10,18 +10,18 @@ export class LessonRepository implements ILessonRepository {
     return lesson._id.toString();
   }
 
-  async getLesson(lessonId: string): Promise<ILesson | null> {
+  async getLesson(lessonId: string): Promise<ILessonDocument | null> {
     return await Lesson.findById(lessonId);
   }
 
-  async getLessonBySlug(slug: string): Promise<ILesson | null> {
+  async getLessonBySlug(slug: string): Promise<ILessonDocument | null> {
     return await Lesson.findOne({ slug });
   }
 
   async updateLesson(
     lessonId: string,
     data: Partial<ILesson>
-  ): Promise<ILesson | null> {
+  ): Promise<ILessonDocument | null> {
     return await Lesson.findByIdAndUpdate(lessonId, data, { new: true });
   }
 
@@ -32,7 +32,7 @@ export class LessonRepository implements ILessonRepository {
     }
   }
 
-  async findByTitle(title: string): Promise<ILesson | null> {
+  async findByTitle(title: string): Promise<ILessonDocument | null> {
     return await Lesson.findOne({
       title: { $regex: `^${title}$`, $options: "i" },
     });
