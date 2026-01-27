@@ -10,11 +10,11 @@ export class OtpRepository implements IOtpRepository {
     otp: number,
     expiresAt: number,
     purpose: "verification" | "reset",
-    userData?: Partial<IUser>
+
   ): Promise<void> {
     await Otp.findOneAndUpdate(
       { email },
-      { otp, expiresAt, purpose, userData },
+      { otp, expiresAt, purpose },
       { upsert: true, new: true }
     );
   }

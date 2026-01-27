@@ -53,15 +53,16 @@ export class UserService implements IUserService {
       docUrl = await this.fileUploadService.uploadFile(verificationDoc, 'verification-docs');
     }
 
-    const userData: Partial<IUser> = {
-      ...data,
-      password: hashedPassword,
-      isVerified: data.role === 'instructor' ? false : true,
-      isEmailVerified: false,
-      doc: docUrl,
-    };
+  
+    await this.userRepository.createUser({
+  ...data,
+  password: hashedPassword,
+  isEmailVerified: false,
+  isVerified: data.role === 'instructor' ? false : true,
+  doc: docUrl,
+});
 
-    await this.otpService.sendOtp(data.email!, 'verification', userData);
+    await this.otpService.sendOtp(data.email!, 'verification',);
     return { message: 'OTP sent for verification' };
   }
 
@@ -94,9 +95,19 @@ export class UserService implements IUserService {
 
   async login(email: string, password: string): Promise<LoginUserResponseDTO|null> {
     const user = await this.userRepository.getUserByEmail(email);
+    
  if (!user) {
     throw new AppError(STATUS_CODES.BAD_REQUEST, 'Invalid credentials');
   }
+  if (!user.isEmailVerified) {
+  // Auto-resend fresh OTP
+  await this.otpService.sendOtp(email, 'verification');
+
+  throw new AppError(
+    STATUS_CODES.FORBIDDEN,
+    'Email not verified. A new verification code has been sent to your email.'
+  );
+}
     if (user.isBlocked) throw new AppError(STATUS_CODES.FORBIDDEN, 'Your account has been blocked by the admin.');
 
     if (!user.isEmailVerified) {
