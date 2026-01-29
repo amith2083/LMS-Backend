@@ -8,6 +8,6 @@ export interface ILessonService {
   updateLesson(lessonId: string, data: Partial<ILesson>): Promise<ILesson | null>;
   // changeLessonPublishState(lessonId: string): Promise<boolean>;
   deleteLesson(lessonId: string, moduleId: string): Promise<void>;
-  getUploadSignedUrl(fileName: string, fileType: string): Promise<{ signedUrl: string; fileUrl: string; key: string }>;
+  getUploadSignedUrl(fileName: string, fileType: string): Promise<{ signedUrl: string; key: string }>;
 getPlaybackSignedUrl(key: string): Promise<{ signedUrl: string }>;
 }

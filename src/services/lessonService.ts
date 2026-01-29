@@ -81,10 +81,10 @@ async createLesson(data: Partial<ILesson>, moduleId: string): Promise<void> {
       ContentType: fileType,
     });
 
-    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
-    const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 1800 });
+    // const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
-    return { signedUrl, fileUrl, key };
+    return { signedUrl, key };
   }
 
   async getPlaybackSignedUrl(key: string) {
