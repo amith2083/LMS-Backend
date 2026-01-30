@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { IQuizSetRepository } from "../interfaces/quiz/IQuizsSetRepository";
-import { IQuizsetDocument, Quizset } from "../models/quizset";
-import { Quiz } from "../models/quizzes";
+import { IQuizsetDocument, IQuizsetPopulatedDocument, Quizset } from "../models/quizset";
+import { IQuizDocument} from "../models/quizzes";
 import { IQuizset } from "../types/quizset";
 
 export class QuizsetRepository implements IQuizSetRepository {
@@ -9,8 +9,9 @@ export class QuizsetRepository implements IQuizSetRepository {
     return await Quizset.find({instructor:instructorId}).populate("quizIds");
   }
 
-  async getQuizsetById(id: string): Promise<IQuizsetDocument | null> {
-    return await Quizset.findById(id).populate("quizIds");
+  async getQuizsetById(id: string): Promise<IQuizsetPopulatedDocument | null> {
+    return await Quizset.findById(id)
+    .populate<{ quizIds: IQuizDocument[] }>("quizIds");
   }
 
   async createQuizset(data: Partial<IQuizset>): Promise<IQuizsetDocument> {

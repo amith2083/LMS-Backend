@@ -27,12 +27,12 @@ export class AssessmentService implements IAssessmentService {
     const assessmentRecord = quizzes.map((quiz) => {
       const userAnswer = answers.find((a) => a.quizId === quiz._id.toString());
 
-      const mergedOptions = quiz.options.map((opt:any) => ({
+      const mergedOptions = quiz?.options?.map((opt:any) => ({
         option: opt.text,
         isCorrect: opt.is_correct,
         isSelected:
           userAnswer?.options.some((uo) => uo.option === opt.text) || false,
-      }));
+      }))?? [];
 
       return {
         quizId: quiz._id.toString(),
