@@ -8,7 +8,7 @@ import fs from 'fs';
 import path from 'path';
 
 const getPublicFilePath = (filePath: string): string => {
-  return path.join(process.cwd(), 'public', filePath);
+  return path.join(process.cwd(), 'dist', filePath);
 };
 
 // Load all assets once at startup (best performance)
