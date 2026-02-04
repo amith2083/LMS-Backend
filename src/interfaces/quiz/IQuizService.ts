@@ -1,10 +1,10 @@
-import { IQuizsetDocument } from "../../models/quizset";
+import { IQuizsetDocument, IQuizsetPopulatedDocument } from "../../models/quizset";
 import { IQuizset } from "../../types/quizset";
 
 
 export interface IQuizService {
   getQuizsets(instructorId:string): Promise<IQuizsetDocument[]>;
-  getQuizsetById(id: string): Promise<IQuizsetDocument | null>;
+  getQuizsetById(id: string): Promise<IQuizsetPopulatedDocument | null>;
   createQuizset(data: {title:string},instructorId:string): Promise<IQuizsetDocument>;
   updateQuizset(quizsetId: string, data: Partial<IQuizset>): Promise<IQuizsetDocument | null>;
     changeQuizsetPublishState(quizsetId: string): Promise<boolean>;

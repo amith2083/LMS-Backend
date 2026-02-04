@@ -6,7 +6,7 @@ import { IQuizService } from '../interfaces/quiz/IQuizService';
 import { IQuizSetRepository } from '../interfaces/quiz/IQuizsSetRepository';
 import { IQuizRepository } from '../interfaces/quiz/IQuizRepository';
 import { IQuizset } from '../types/quizset';
-import { IQuizsetDocument } from '../models/quizset';
+import { IQuizsetDocument, IQuizsetPopulatedDocument } from '../models/quizset';
 
 
 export class QuizService implements IQuizService {
@@ -20,7 +20,7 @@ export class QuizService implements IQuizService {
     return await this.quizsetRepository.getQuizsets(instructorId);
   }
 
-  async getQuizsetById(id: string): Promise<IQuizsetDocument> {
+  async getQuizsetById(id: string): Promise<IQuizsetPopulatedDocument> {
     const quizset = await this.quizsetRepository.getQuizsetById(id);
     if (!quizset) throw new AppError(STATUS_CODES.NOT_FOUND, 'Quizset not found');
     return quizset;

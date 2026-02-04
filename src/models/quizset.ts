@@ -1,4 +1,7 @@
 import mongoose, { Schema, Document, model, Types } from "mongoose";
+import { IQuizDocument } from "../models/quizzes";
+
+
 
 
 export interface IQuizsetDocument extends Document {
@@ -12,6 +15,14 @@ export interface IQuizsetDocument extends Document {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+
+
+export interface IQuizsetPopulatedDocument
+  extends Omit<IQuizsetDocument, "quizIds"> {
+  quizIds: IQuizDocument[];
+}
+
 
 const quizsetSchema = new Schema<IQuizsetDocument>(
   {
