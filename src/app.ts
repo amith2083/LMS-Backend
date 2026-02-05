@@ -72,7 +72,7 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   });
 };
 
-// Attach after all routes
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT ;

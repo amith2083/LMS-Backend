@@ -24,6 +24,10 @@ dist/
 build/
 *.tsbuildinfo
 
+# Private keys
+private
+private.pub
+
 # IDE/editor files
 .vscode/
 .idea/
