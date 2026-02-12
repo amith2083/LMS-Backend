@@ -15,6 +15,6 @@ export interface IUserService {
   updateUser(userId: string, data: Partial<IUser>): Promise<UpdateUserResponseDTO | null>;
   login(email: string, password: string): Promise<LoginUserResponseDTO|null>;
   googleSync(email: string, name: string, image: string): Promise<LoginUserResponseDTO|null>;
-  checkTokenReuse(jti: string): Promise<boolean>;
-  markTokenAsUsed(jti: string): Promise<void>;
+  // checkTokenReuse(jti: string): Promise<boolean>;
+  // markTokenAsUsed(jti: string): Promise<void>;
 }

@@ -24,11 +24,12 @@ import certificateRouter from "./routes/certificateRoute";
 import assessmentRouter from "./routes/assessmentRoute";
 import payoutRouter from "./routes/payoutRoute";
 import { AppError } from "./utils/asyncHandler";
+import { redisClient } from "./config/redis";
 
 dotenv.config();
 
 const app = express();
-dbConnect();
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(morganMiddleware);
@@ -36,7 +37,7 @@ app.use(
   cors({
     origin: process.env.FRONTEND_URL,
     credentials: true,
-  })
+  }),
 );
 
 // Routes
@@ -59,11 +60,11 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   logger.error(err.stack || err.message);
 
   if (err instanceof AppError) {
-     res.status(err.statusCode).json({
+    res.status(err.statusCode).json({
       success: false,
       message: err.message,
     });
-    return
+    return;
   }
 
   res.status(err.status || 500).json({
@@ -72,11 +73,28 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   });
 };
 
-
 app.use(errorHandler);
 
-const PORT = process.env.PORT ;
+const PORT = process.env.PORT;
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+const startServer = async () => {
+  try {
+    // Connect MongoDB
+    await dbConnect();
+    console.log("MongoDB connected");
+
+    // Connect Redis
+    await redisClient.connect();
+    console.log("Redis connected");
+
+    // Start Express Server
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Server startup failed:", error);
+    process.exit(1);
+  }
+};
+
+startServer();

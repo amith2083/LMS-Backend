@@ -14,7 +14,7 @@ import { GetEmailResponse } from 'resend';
 
 
 
-const usedJtis = new Set<string>(); // In-memory jti blacklist
+// const usedJtis = new Set<string>(); // In-memory jti blacklist
 
 export class UserService implements IUserService {
   constructor(
@@ -176,11 +176,11 @@ export class UserService implements IUserService {
   return newUser? mapUserDocumentToLoginUserResponeDto(newUser):null;
 }
 
-  async checkTokenReuse(jti: string): Promise<boolean> {
-    return usedJtis.has(jti);
-  }
+  // async checkTokenReuse(jti: string): Promise<boolean> {
+  //   return usedJtis.has(jti);
+  // }
 
-  async markTokenAsUsed(jti: string): Promise<void> {
-    usedJtis.add(jti);
-  }
+  // async markTokenAsUsed(jti: string): Promise<void> {
+  //   usedJtis.add(jti);
+  // }
 }

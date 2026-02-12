@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { AppError } from "../utils/asyncHandler";
 import { IUser } from "../types/IUser";
+import { redisClient } from "../config/redis";
 
 export class UserController implements IUserController {
   constructor(
@@ -129,7 +130,7 @@ export class UserController implements IUserController {
     if (!user) {
       throw new AppError(STATUS_CODES.NOT_FOUND, "User not found");
     }
-
+  const jti = uuidv4();
     const accessToken = jwt.sign(
       {
         id: user._id,
@@ -138,20 +139,25 @@ export class UserController implements IUserController {
         isBlocked: user.isBlocked,
       },
       process.env.JWT_ACCESS_SECRET!,
-      { expiresIn: "50m" }
+      { expiresIn: "30m" }
     );
 
     const refreshToken = jwt.sign(
-      { id: user._id, jti: uuidv4() },
+      { id: user._id, jti },
       process.env.JWT_REFRESH_SECRET!,
       { expiresIn: "1d" }
     );
+
+      // Store refresh token in Redis with TTL
+  await redisClient.set(`refresh:${jti}`, user._id.toString(), {
+    EX: 60 * 60 * 24,
+  });
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: 50 * 60 * 1000,
+      maxAge: 30 * 60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -188,39 +194,57 @@ export class UserController implements IUserController {
       refreshToken,
       process.env.JWT_REFRESH_SECRET!
     ) as { id: string; jti: string };
-    if (await this.userService.checkTokenReuse(decoded.jti)) {
-      throw new AppError(STATUS_CODES.UNAUTHORIZED, "Token reused");
-    }
+    // if (await this.userService.checkTokenReuse(decoded.jti)) {
+    //   throw new AppError(STATUS_CODES.UNAUTHORIZED, "Token reused");
+    // }
 
-    await this.userService.markTokenAsUsed(decoded.jti);
+    // await this.userService.markTokenAsUsed(decoded.jti);
+//  Check if token exists in Redis
+  const stored = await redisClient.get(`refresh:${decoded.jti}`);
+ 
+  if (!stored) {
+    throw new AppError(
+      STATUS_CODES.UNAUTHORIZED,
+      "Invalid or reused refresh token"
+    );
+  }
 
+  //  Delete old refresh token (rotation)
+  await redisClient.del(`refresh:${decoded.jti}`);
     const user = await this.userService.getUserById(decoded.id);
     if (!user) {
       throw new AppError(STATUS_CODES.UNAUTHORIZED, "User not found");
     }
+
+     const newJti = uuidv4();
     const newAccessToken = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
       process.env.JWT_ACCESS_SECRET!,
-      { expiresIn: "50m" }
+      { expiresIn: "30m" }
     );
 
     const newRefreshToken = jwt.sign(
-      { id: user._id, jti: uuidv4() },
+      { id: user._id, jti: newJti },
       process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: "7d" }
+      { expiresIn: "1d" }
     );
+
+     //  Store new refresh token
+  await redisClient.set(`refresh:${newJti}`, user._id, {
+    EX: 60 * 60 * 24,
+  });
 
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 50 * 60 * 1000,
+      maxAge: 30 * 60 * 1000,
     });
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 1 * 24 * 60 * 60 * 1000,
     });
 
     res.json({ message: "Tokens refreshed" });
@@ -234,7 +258,8 @@ export class UserController implements IUserController {
           refreshToken,
           process.env.JWT_REFRESH_SECRET!
         ) as { jti: string };
-        await this.userService.markTokenAsUsed(decoded.jti);
+        // await this.userService.markTokenAsUsed(decoded.jti);
+           await redisClient.del(`refresh:${decoded.jti}`);
       } catch {}
     }
 
