@@ -73,4 +73,13 @@ async getRelatedCourses(req: Request, res: Response): Promise<void> {
     await this.courseService.deleteCourse(req.params.id);
     res.status(STATUS_CODES.OK).json({ message: 'Course deleted' });
   }
+  async refreshEmbeddings(req: Request, res: Response): Promise<void> {
+    
+      const stats = await this.courseService.refreshCourseEmbeddings();
+      res.status(STATUS_CODES.CREATED).json({
+        message: "Embeddings refreshed successfully",
+        stats,
+      });
+    
+  }
 }

@@ -8,4 +8,5 @@ export interface ICourseController {
   createCourse(req: Request, res: Response): Promise<void>;
   updateCourse(req: Request, res: Response): Promise<void>;
   deleteCourse(req: Request, res: Response): Promise<void>;
+   refreshEmbeddings(req: Request, res: Response): Promise<void>
 }

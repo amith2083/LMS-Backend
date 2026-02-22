@@ -26,4 +26,6 @@ getCourses(params?: {
   updateCourse(id: string, data: Partial<ICourse>): Promise<UpdateCourseResponseDTO | null>;
  updateCourseImage(courseId: string, file: Express.Multer.File): Promise<UpdateCourseImageResponse>
   deleteCourse(id: string): Promise<void>;
+    refreshCourseEmbeddings(): Promise<{ upserted: number; deleted: number }> 
+  
 }

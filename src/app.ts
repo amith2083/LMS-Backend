@@ -23,8 +23,14 @@ import testimonialRouter from "./routes/testimonialRoute";
 import certificateRouter from "./routes/certificateRoute";
 import assessmentRouter from "./routes/assessmentRoute";
 import payoutRouter from "./routes/payoutRoute";
+import chatRouter from "./routes/chatbotRoute";
 import { AppError } from "./utils/asyncHandler";
 import { redisClient } from "./config/redis";
+import mongoose from "mongoose";
+import { VectorSearchRepository } from "./repositories/vectorRepository";
+import OpenAI from "openai";
+import { ChatbotService } from "./services/chatbotService";
+import { ChatController } from "./controllers/chatbotController";
 
 dotenv.config();
 
@@ -54,7 +60,7 @@ app.use("/api/testimonial", testimonialRouter);
 app.use("/api/certificate", certificateRouter);
 app.use("/api/assessment", assessmentRouter);
 app.use("/api/payout", payoutRouter);
-
+app.use("/api/chat", chatRouter);
 // Centralized error-handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   logger.error(err.stack || err.message);
@@ -82,6 +88,14 @@ const startServer = async () => {
     // Connect MongoDB
     await dbConnect();
     console.log("MongoDB connected");
+    const mongoClient = mongoose.connection.getClient();
+    const vectorRepository = new VectorSearchRepository(mongoClient);
+   
+    const chatbotService = new ChatbotService(vectorRepository);
+    const chatController = new ChatController(chatbotService);
+
+    // Optional: store in app.locals so routes can access without globals
+    app.locals.chatbotController = chatController;
 
     // Connect Redis
     await redisClient.connect();

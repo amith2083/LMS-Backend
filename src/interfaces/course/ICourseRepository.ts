@@ -17,6 +17,7 @@ export interface ICourseRepository {
     totalPages: number;
   }>;
   getCourse(id: string): Promise<ICourseDocument | null>;
+  getAllCourseForEmbedding(): Promise<ICourseDocument[]>
   getCoursesByInstructorId(instructorId: string): Promise<ICourseDocument[]>;
   getCoursesForAdmin(): Promise<ICourseDocument[]>;
   getCoursesByCategoryId(categoryId: string): Promise<ICourseDocument[]>;

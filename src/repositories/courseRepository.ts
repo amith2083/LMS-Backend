@@ -118,7 +118,35 @@ export class CourseRepository implements ICourseRepository {
   async getCoursesByQuizsetId(quizsetId: string): Promise<ICourseDocument[]> {
     return await Course.find({ quizSet: quizsetId });
   }
-
+ async getAllCourseForEmbedding(): Promise<ICourseDocument[]> {
+    return await Course.find({ status: true, isApproved: true })
+      .populate({
+        path: "instructor",
+        select: "_id name email  designation", 
+      })
+      .populate({
+        path: "category",
+        select: "_id title", 
+      })
+      .populate({
+        path: "modules",
+        populate: { path: "lessonIds", model: "Lesson" },
+      })
+      .populate({
+        path: "quizSet",
+        populate: { path: "quizIds", model: "Quiz" },
+      })
+      .populate({
+      path: 'testimonials',
+      populate: {
+        path: 'user',
+        model: 'User',
+        select: '_id name email', 
+      },
+    
+    })
+      .sort({ createdOn: -1 });
+  }
   async getCoursesByInstructorId(instructorId: string): Promise<ICourseDocument[]> {
     return await Course.find({ instructor: instructorId })
       .populate("instructor category modules")
