@@ -128,75 +128,104 @@ export class CourseService implements ICourseService {
    * 4. Upsert them into MongoDB
    */
   async refreshCourseEmbeddings(): Promise<{
-    upserted: number;
-    deleted: number;
-  }> {
-    //fetching active courses
-    const activeCourses =
-      await this.courseRepository.getAllCourseForEmbedding();
+  upserted: number;
+  deleted: number;
+}> {
 
-    //  Reuse existing mongoose connection
-    const client = mongoose.connection.getClient();
-    const db = client.db("lms");
-    const chunksColl = db.collection("course_chunks");
+  const activeCourses =
+    await this.courseRepository.getAllCourseForEmbedding();
 
-    // Collect all active course IDs
-    const activeCourseIds = activeCourses.map((c: any) => c._id.toString());
-    // Delete embeddings where courseId NOT in active list
-    const deleteResult = await chunksColl.deleteMany({
-      "metadata.type": "course",
-      "metadata.courseId": { $nin: activeCourseIds },
+  const client = mongoose.connection.getClient();
+  const db = client.db("lms");
+  const chunksColl = db.collection("course_chunks");
+
+  const activeCourseIds = activeCourses.map((c: any) =>
+    c._id.toString()
+  );
+
+  // Delete old embeddings
+  const deleteResult = await chunksColl.deleteMany({
+    "metadata.type": "course",
+    "metadata.courseId": { $nin: activeCourseIds },
+  });
+
+  // ----------------------------
+  //  Generate all texts first
+  // ----------------------------
+  const courseData = activeCourses
+    .map((course: any) => {
+      const text = generateCourseTextForEmbedding(course);
+      if (text.length < 20) return null;
+
+      return {
+        course,
+        text,
+      };
+    })
+    .filter(Boolean) as { course: any; text: string }[];
+
+  if (courseData.length === 0) {
+    return { upserted: 0, deleted: deleteResult.deletedCount };
+  }
+
+  // ----------------------------
+  //  Create embeddings in BATCH
+  // ----------------------------
+  const texts = courseData.map((item) => item.text);
+
+  let embeddings: number[][] = [];
+
+  try {
+    const response = await openai.embeddings.create({
+      model: "BAAI/bge-m3",
+      input: texts,   //  Batch input
     });
 
-    // 2. Upsert active ones
-    let upsertedCount = 0;
+    embeddings = response.data.map((d) => d.embedding);
 
-    for (const course of activeCourses) {
-      const courseIdStr = course._id.toString();
-      // Convert full course into structured text
-      const text = generateCourseTextForEmbedding(course);
-      if (text.length < 20) continue; // skip almost empty
-      let embedding: number[] = [];
-      try {
-        const res = await openai.embeddings.create({
-          model: "BAAI/bge-m3",
-          input: text,
-        });
-        embedding = res.data[0].embedding;
-      } catch (err) {
-        console.error(`Embedding failed for course ${course.title}:`, err);
-        continue;
-      }
- // Filter to check if document already exists
-      const filter = {
-        "metadata.courseId": courseIdStr,
-        "metadata.type": "course",
-      };
-    // Update data
-      const update = {
-        $set: {
-          text,// Full searchable text
-          embedding, // Vector embedding
-          metadata: {
-            courseId: courseIdStr,
-            type: "course",
-            title: course.title,
-            price: course.price ?? 0,
-            isFree: !course.price || course.price === 0,
-            updatedAt: course.updatedAt,
-          },
-        },
-      };
- // Insert if not exists, update if exists
-      await chunksColl.updateOne(filter, update, { upsert: true });
-      upsertedCount++;
-    }
-
-    // await client.close();
-
-    return {
-      upserted: upsertedCount,
-      deleted: deleteResult.deletedCount,
-    };
+  } catch (err) {
+    console.error("Batch embedding failed:", err);
+    return { upserted: 0, deleted: deleteResult.deletedCount };
   }
+
+  // ----------------------------
+  //  Upsert with embeddings
+  // ----------------------------
+  let upsertedCount = 0;
+
+  for (let i = 0; i < courseData.length; i++) {
+
+    const { course, text } = courseData[i];
+    const embedding = embeddings[i];
+    const courseIdStr = course._id.toString();
+
+    const filter = {
+      "metadata.courseId": courseIdStr,
+      "metadata.type": "course",
+    };
+
+    const update = {
+      $set: {
+        text,
+        embedding,
+        metadata: {
+          courseId: courseIdStr,
+          type: "course",
+          title: course.title,
+          price: course.price ?? 0,
+          isFree: !course.price || course.price === 0,
+          updatedAt: course.updatedAt,
+        },
+      },
+    };
+
+    await chunksColl.updateOne(filter, update, { upsert: true });
+    upsertedCount++;
+  }
+
+  return {
+    upserted: upsertedCount,
+    deleted: deleteResult.deletedCount,
+  };
+}
 }

@@ -17,7 +17,7 @@ export class VectorSearchRepository implements IVectorSearchRepository {
 
   async searchSimilarChunks(
     queryEmbedding: number[],
-    limit = 5,
+    limit = 20,
     minScore = 0.72,
   ): Promise<VectorSearchResult[]> {
     //MongoDB Atlas Vector Search Pipeline

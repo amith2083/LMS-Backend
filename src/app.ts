@@ -31,6 +31,7 @@ import { VectorSearchRepository } from "./repositories/vectorRepository";
 import OpenAI from "openai";
 import { ChatbotService } from "./services/chatbotService";
 import { ChatController } from "./controllers/chatbotController";
+import { CourseRepository } from "./repositories/courseRepository";
 
 dotenv.config();
 
@@ -90,11 +91,12 @@ const startServer = async () => {
     console.log("MongoDB connected");
     const mongoClient = mongoose.connection.getClient();
     const vectorRepository = new VectorSearchRepository(mongoClient);
+    const courseRepository = new CourseRepository();
    
-    const chatbotService = new ChatbotService(vectorRepository);
+    const chatbotService = new ChatbotService(vectorRepository,courseRepository);
     const chatController = new ChatController(chatbotService);
 
-    // Optional: store in app.locals so routes can access without globals
+    // store in app.locals so routes can access without globals
     app.locals.chatbotController = chatController;
 
     // Connect Redis

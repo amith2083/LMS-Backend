@@ -4,11 +4,13 @@ import { IChatbotService } from '../interfaces/chatbot/IChatbotService';
 import { getQueryEmbedding } from '../utils/getQueryEmbedding';
 import { IVectorSearchRepository } from '../interfaces/chatbot/IChatbotRepository';
 import { openai } from '../config/openai';
+import { ICourseRepository } from '../interfaces/course/ICourseRepository';
 
 export class ChatbotService implements IChatbotService {
   constructor(
      // Inject repository responsible for MongoDB vector search
        private vectorRepository: IVectorSearchRepository ,
+       private courseRepository: ICourseRepository ,
   ) {}
 
 //   async generateAnswer(query: string): Promise<string> {
@@ -54,6 +56,24 @@ export class ChatbotService implements IChatbotService {
 async generateAnswer(query: string): Promise<string> {
     const normalized = query.trim().toLowerCase();
 
+    // -------------------------
+  // COUNT INTENT DETECTION
+  // -------------------------
+  const countIntent = [
+    "how many courses",
+    "total courses",
+    "number of courses",
+    "how many available"
+  ];
+
+  if (countIntent.some(q => normalized.includes(q))) {
+
+    const totalCourses =
+      await this.courseRepository.getAllCourseForEmbedding();
+
+    return `We currently have ${totalCourses.length} courses available.`;
+  }
+
   // -----------------------
   // 1️ SMALL TALK HANDLING
   // -----------------------
@@ -91,7 +111,7 @@ Let me know if you'd like help finding a course.`;
   const queryEmbedding = await getQueryEmbedding(query);
   //Perform Vector Search in MongoDB
   const results = await this.vectorRepository.searchSimilarChunks(queryEmbedding);
-if (results.length === 0 || results[0].score < 0.75) {
+if (results.length === 0) {
     return "I don't have information about that in our available courses.";
   }
  
@@ -99,7 +119,7 @@ if (results.length === 0 || results[0].score < 0.75) {
     // Take top 3 most relevant results
     // Limit text length to avoid token explosion
   const context = results
-    .slice(0, 3)
+    .slice(0, 10)
     .map((r) => r.text.slice(0, 1200))
     .join("\n\n");
 
