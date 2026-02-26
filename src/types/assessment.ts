@@ -13,8 +13,12 @@ export interface IAssessmentItem {
 }
 
 export interface IAssessment  {
+  user:string,
+  course:string,
+  quizSet:string,
   assessments: IAssessmentItem[];
-  otherMarks: number;
+  actualMark:number,
+  totalScore: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

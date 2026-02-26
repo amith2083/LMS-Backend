@@ -8,23 +8,24 @@ export class AssessmentController {
 
   async submitQuiz(req: Request, res: Response): Promise<void> {
     console.log('ans',req.body)
-    // const { quizSetId, answers } = req.body;
+    const { quizSetId, answers } = req.body;
 
-    // const { courseId } = req.params;
-    //   if (!req.user) {
-    //     throw new AppError(STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
-    //   }
+    const { courseId } = req.params;
+      if (!req.user) {
+        throw new AppError(STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+      }
       
-    // const userId = req.user.id;
-
-    // await this.assessmentService.addQuizAssessment(
-    //   courseId,
-    //   userId,
-    //   quizSetId,
-    //   answers,
-    // );
-    // res
-    //   .status(201)
-    //   .json({ success: true, message: "Quiz submitted successfully" });
+    const userId = req.user.id;
+console.log('c',courseId)
+console.log('u',userId)
+    await this.assessmentService.addQuizAssessment(
+      courseId,
+      userId,
+      quizSetId,
+      answers,
+    );
+    res
+      .status(201)
+      .json({ success: true, message: "Quiz submitted successfully" });
   }
 }

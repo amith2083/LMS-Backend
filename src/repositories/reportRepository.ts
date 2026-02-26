@@ -12,7 +12,7 @@ export class ReportRepository implements IReportRepository {
   }
 
   async getReportByCourseAndUser(courseId: string, userId: string): Promise<IReportDocument | null> {
-    return await Report.findOne({ course: courseId, student: userId });
+    return await Report.findOne({ course: courseId, student: userId }).populate({ path: 'quizAssessment', model: Assessment });;
   }
 
  

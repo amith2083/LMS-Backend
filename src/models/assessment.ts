@@ -14,7 +14,7 @@ export interface IAssessmentDocument extends Document {
       isSelected: boolean;
     }[];
   }[];
-  otherMarks: number;
+  actualMark:number,
   totalScore?: number;
   createdAt?: Date;
   updatedAt?: Date;
@@ -60,7 +60,7 @@ const assessmentSchema = new Schema<IAssessmentDocument>(
       },
     ],
 
-    otherMarks: {
+    actualMark: {
       type: Number,
       default: 0,
     },

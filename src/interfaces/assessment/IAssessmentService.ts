@@ -1,8 +1,8 @@
 export interface IAssessmentService {
   addQuizAssessment(
-    courseId: string,
-    userId: string,
-    quizSetId: string,
+      user: string,
+    course: string,
+    quizSet: string,
     answers: { quizId: string; options: { option: string }[] }[]
   ): Promise<void>;
 }
