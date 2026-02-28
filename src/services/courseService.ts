@@ -128,104 +128,99 @@ export class CourseService implements ICourseService {
    * 4. Upsert them into MongoDB
    */
   async refreshCourseEmbeddings(): Promise<{
-  upserted: number;
-  deleted: number;
-}> {
+    upserted: number;
+    deleted: number;
+  }> {
+    const activeCourses =
+      await this.courseRepository.getAllCourseForEmbedding();
 
-  const activeCourses =
-    await this.courseRepository.getAllCourseForEmbedding();
+    const client = mongoose.connection.getClient();
+    const db = client.db("lms");
+    const chunksColl = db.collection("course_chunks");
 
-  const client = mongoose.connection.getClient();
-  const db = client.db("lms");
-  const chunksColl = db.collection("course_chunks");
+    const activeCourseIds = activeCourses.map((c: any) => c._id.toString());
 
-  const activeCourseIds = activeCourses.map((c: any) =>
-    c._id.toString()
-  );
-
-  // Delete old embeddings
-  const deleteResult = await chunksColl.deleteMany({
-    "metadata.type": "course",
-    "metadata.courseId": { $nin: activeCourseIds },
-  });
-
-  // ----------------------------
-  //  Generate all texts first
-  // ----------------------------
-  const courseData = activeCourses
-    .map((course: any) => {
-      const text = generateCourseTextForEmbedding(course);
-      if (text.length < 20) return null;
-
-      return {
-        course,
-        text,
-      };
-    })
-    .filter(Boolean) as { course: any; text: string }[];
-
-  if (courseData.length === 0) {
-    return { upserted: 0, deleted: deleteResult.deletedCount };
-  }
-
-  // ----------------------------
-  //  Create embeddings in BATCH
-  // ----------------------------
-  const texts = courseData.map((item) => item.text);
-
-  let embeddings: number[][] = [];
-
-  try {
-    const response = await openai.embeddings.create({
-      model: "BAAI/bge-m3",
-      input: texts,   //  Batch input
+    // Delete old embeddings
+    const deleteResult = await chunksColl.deleteMany({
+      "metadata.type": "course",
+      "metadata.courseId": { $nin: activeCourseIds },
     });
 
-    embeddings = response.data.map((d) => d.embedding);
+    // ----------------------------
+    //  Generate all texts first
+    // ----------------------------
+    const courseData = activeCourses
+      .map((course: any) => {
+        const text = generateCourseTextForEmbedding(course);
+        if (text.length < 20) return null;
 
-  } catch (err) {
-    console.error("Batch embedding failed:", err);
-    return { upserted: 0, deleted: deleteResult.deletedCount };
-  }
+        return {
+          course,
+          text,
+        };
+      })
+      .filter(Boolean) as { course: any; text: string }[];
 
-  // ----------------------------
-  //  Upsert with embeddings
-  // ----------------------------
-  let upsertedCount = 0;
+    if (courseData.length === 0) {
+      return { upserted: 0, deleted: deleteResult.deletedCount };
+    }
 
-  for (let i = 0; i < courseData.length; i++) {
+    // ----------------------------
+    //  Create embeddings in BATCH
+    // ----------------------------
+    const texts = courseData.map((item) => item.text);
 
-    const { course, text } = courseData[i];
-    const embedding = embeddings[i];
-    const courseIdStr = course._id.toString();
+    let embeddings: number[][] = [];
 
-    const filter = {
-      "metadata.courseId": courseIdStr,
-      "metadata.type": "course",
-    };
+    try {
+      const response = await openai.embeddings.create({
+        model: "BAAI/bge-m3",
+        input: texts, //  Batch input
+      });
 
-    const update = {
-      $set: {
-        text,
-        embedding,
-        metadata: {
-          courseId: courseIdStr,
-          type: "course",
-          title: course.title,
-          price: course.price ?? 0,
-          isFree: !course.price || course.price === 0,
-          updatedAt: course.updatedAt,
+      embeddings = response.data.map((d) => d.embedding);
+    } catch (err) {
+      console.error("Batch embedding failed:", err);
+      return { upserted: 0, deleted: deleteResult.deletedCount };
+    }
+
+    // ----------------------------
+    //  Upsert with embeddings
+    // ----------------------------
+    let upsertedCount = 0;
+
+    for (let i = 0; i < courseData.length; i++) {
+      const { course, text } = courseData[i];
+      const embedding = embeddings[i];
+      const courseIdStr = course._id.toString();
+
+      const filter = {
+        "metadata.courseId": courseIdStr,
+        "metadata.type": "course",
+      };
+
+      const update = {
+        $set: {
+          text,
+          embedding,
+          metadata: {
+            courseId: courseIdStr,
+            type: "course",
+            title: course.title,
+            price: course.price ?? 0,
+            isFree: !course.price || course.price === 0,
+            updatedAt: course.updatedAt,
+          },
         },
-      },
+      };
+
+      await chunksColl.updateOne(filter, update, { upsert: true });
+      upsertedCount++;
+    }
+
+    return {
+      upserted: upsertedCount,
+      deleted: deleteResult.deletedCount,
     };
-
-    await chunksColl.updateOne(filter, update, { upsert: true });
-    upsertedCount++;
   }
-
-  return {
-    upserted: upsertedCount,
-    deleted: deleteResult.deletedCount,
-  };
-}
 }
