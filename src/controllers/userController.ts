@@ -132,15 +132,15 @@ const file = req.file;
 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+   secure: true,
+   sameSite: "lax",
     maxAge: 30 * 60 * 1000,
   });
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+   secure: true,
+   sameSite: "lax",
     maxAge: 24 * 60 * 60 * 1000,
   });
 
@@ -218,15 +218,15 @@ const file = req.file;
     // ================= COOKIES =================
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: true,
+sameSite: "lax",
       maxAge: 30 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+     secure: true,
+sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -296,13 +296,13 @@ const file = req.file;
 
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
-     secure: false,
-      sameSite: "lax",
+   secure: true,
+sameSite: "lax",
       maxAge: 30 * 60 * 1000,
     });
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-     secure: false,
+     secure: true,
       sameSite: "lax",
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
