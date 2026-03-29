@@ -133,14 +133,14 @@ const file = req.file;
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
    secure: true,
-   sameSite: "lax",
+sameSite: "none",
     maxAge: 30 * 60 * 1000,
   });
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
    secure: true,
-   sameSite: "lax",
+   sameSite: "none",
     maxAge: 24 * 60 * 60 * 1000,
   });
 
@@ -219,14 +219,14 @@ const file = req.file;
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true,
-sameSite: "lax",
+sameSite: "none",
       maxAge: 30 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
      secure: true,
-sameSite: "lax",
+ sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -297,13 +297,13 @@ sameSite: "lax",
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
    secure: true,
-sameSite: "lax",
+sameSite: "none",
       maxAge: 30 * 60 * 1000,
     });
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
      secure: true,
-      sameSite: "lax",
+     sameSite: "none",
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
 
@@ -347,14 +347,14 @@ res.json({
 
     res.clearCookie("accessToken", {
       httpOnly: true,
-    secure: false,
-      sameSite: "lax",
+    secure: true,
+      sameSite: "none",
     });
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
     });
     res.json({ message: "Logged out" });
   };

@@ -101,7 +101,7 @@ const startServer = async () => {
 
     // Connect Redis
     await redisClient.connect();
-    console.log("Redis connected");
+    
 
     // Start Express Server
     app.listen(PORT, () => {
