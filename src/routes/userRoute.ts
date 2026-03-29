@@ -26,13 +26,23 @@ router.post('/resend-otp', asyncHandler(userController.resendOtp.bind(userContro
 router.post('/forgot-password', asyncHandler(userController.forgotPassword.bind(userController)));
 router.post('/reset-password', asyncHandler(userController.resetPassword.bind(userController)));
 router.post('/auth/login', loginRateLimiter, asyncHandler(userController.login.bind(userController)));
-router.post('/auth/set-tokens', asyncHandler(userController.setTokens.bind(userController)));
-router.post('/auth/google-sync', asyncHandler(userController.googleSync.bind(userController)));
+router.post('/auth/google', asyncHandler(userController.googleSync.bind(userController)));
 router.post('/auth/refresh-token', refreshRateLimiter, asyncHandler(userController.refreshToken.bind(userController)));
 router.post('/auth/logout', asyncHandler(userController.logout.bind(userController)));
+router.get(
+  "/me",
+  authenticateToken,
+  asyncHandler(userController.getCurrentUser.bind(userController))
+);
 
 router.get('/', asyncHandler(userController.getUsers.bind(userController)));
 router.get('/:id', authenticateToken, asyncHandler(userController.getUserById.bind(userController)));
 router.put('/:id', authenticateToken, asyncHandler(userController.updateUser.bind(userController)));
+router.put(
+  "/:id/image",
+  authenticateToken,
+  upload.single("image"), 
+  asyncHandler(userController.updateProfileImage.bind(userController))
+);
 
 export default router;

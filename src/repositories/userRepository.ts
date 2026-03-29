@@ -9,9 +9,9 @@ export class UserRepository implements IUserRepository {
     return User.find({ role: { $ne: 'admin' } }).select('-password');
   }
 
-  async getUserById(id: string): Promise<IUserDocument | null> {
-    return User.findById(id);
-  }
+ async getUserById(id: string): Promise<IUserDocument | null> {
+  return User.findById(id).select("-password");
+}
 
   async getUserByEmail(email: string): Promise<IUserDocument | null> {
     return await User.findOne({ email });

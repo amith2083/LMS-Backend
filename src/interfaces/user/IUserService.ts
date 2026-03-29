@@ -1,5 +1,5 @@
 import { Express } from "express";
-import { GetEmailUserResponseDTO,  LoginUserResponseDTO,  UpdateUserResponseDTO,  UserResponseDTO } from "../../dtos/userDto";
+import { GetEmailUserResponseDTO,  LoginUserResponseDTO,  UpdateUserProfileImageResponse,  UpdateUserResponseDTO,  UserResponseDTO } from "../../dtos/userDto";
 import { IUser } from "../../types/IUser";
 
 
@@ -13,6 +13,10 @@ export interface IUserService {
     verificationDoc?: Express.Multer.File
   ): Promise<{ message: string }>;
   updateUser(userId: string, data: Partial<IUser>): Promise<UpdateUserResponseDTO | null>;
+ updateProfileImage(
+  userId: string,
+  file: Express.Multer.File
+): Promise<UpdateUserProfileImageResponse| null>;
   login(email: string, password: string): Promise<LoginUserResponseDTO|null>;
   googleSync(email: string, name: string, image: string): Promise<LoginUserResponseDTO|null>;
   // checkTokenReuse(jti: string): Promise<boolean>;

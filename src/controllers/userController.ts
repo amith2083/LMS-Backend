@@ -8,6 +8,9 @@ import { v4 as uuidv4 } from "uuid";
 import { AppError } from "../utils/asyncHandler";
 import { IUser } from "../types/IUser";
 import { redisClient } from "../config/redis";
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export class UserController implements IUserController {
   constructor(
@@ -49,7 +52,17 @@ export class UserController implements IUserController {
     const updated = await this.userService.updateUser(id, req.body);
     res.json(updated);
   };
+updateProfileImage = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+const file = req.file;
+ 
 
+  const updatedUser = await this.userService.updateProfileImage(id, file!);
+
+  res.json(
+    updatedUser
+  );
+};
   verifyOtp = async (req: Request, res: Response): Promise<void> => {
     const { email, otp } = req.body;
     await this.otpService.verifyOtp(email, otp);
@@ -77,43 +90,63 @@ export class UserController implements IUserController {
     res.json({ message: "Password reset successfully" });
   };
 
-  login = async (req: Request, res: Response): Promise<void> => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      throw new AppError(
-        STATUS_CODES.BAD_REQUEST,
-        "Email and password are required"
-      );
-    }
-    const user = await this.userService.login(email, password);
-   if (!user) throw new AppError(STATUS_CODES.BAD_REQUEST, 'Invalid credentials');
-    // const accessToken = jwt.sign(
-    //   { id: user._id, email: user.email, role: user.role },
-    //   process.env.JWT_ACCESS_SECRET!,
-    //   { expiresIn: '50m' }
-    // );
+ login = async (req: Request, res: Response): Promise<void> => {
+  const { email, password } = req.body;
 
-    // const refreshToken = jwt.sign(
-    //   { id: user._id, jti: uuidv4() },
-    //   process.env.JWT_REFRESH_SECRET!,
-    //   { expiresIn: '7d' }
-    // );
+  if (!email || !password) {
+    throw new AppError(
+      STATUS_CODES.BAD_REQUEST,
+      "Email and password are required"
+    );
+  }
 
-    // res.cookie('accessToken', accessToken, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'lax',
-    //   maxAge: 50 * 60 * 1000,
-    // });
+  const user = await this.userService.login(email, password);
 
-    // res.cookie('refreshToken', refreshToken, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'lax',
-    //   maxAge: 7 * 24 * 60 * 60 * 1000,
-    // });
+  if (!user) {
+    throw new AppError(STATUS_CODES.BAD_REQUEST, "Invalid credentials");
+  }
 
-    res.json({
+  const jti = uuidv4();
+
+  const accessToken = jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      isBlocked: user.isBlocked,
+    },
+    process.env.JWT_ACCESS_SECRET!,
+    { expiresIn: "30m" }
+  );
+
+  const refreshToken = jwt.sign(
+    { id: user.id, jti },
+    process.env.JWT_REFRESH_SECRET!,
+    { expiresIn: "1d" }
+  );
+
+  // Store refresh token in Redis
+  await redisClient.set(`refresh:${jti}`, user.id.toString(), {
+    EX: 60 * 60 * 24,
+  });
+
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 30 * 60 * 1000,
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+
+  res.json({
+    message: "Login successful",
+    user: {
       id: user.id,
       name: user.name,
       email: user.email,
@@ -121,19 +154,48 @@ export class UserController implements IUserController {
       isVerified: user.isVerified,
       isBlocked: user.isBlocked,
       profilePicture: user.profilePicture,
-    });
-  };
+    },
+  });
+};
 
-  setTokens = async (req: Request, res: Response): Promise<void> => {
-    const { email } = req.body;
-    const user = await this.userService.getUserByEmail(email);
-    if (!user) {
-      throw new AppError(STATUS_CODES.NOT_FOUND, "User not found");
+  googleSync = async (req: Request, res: Response): Promise<void> => {
+   const { token } = req.body;
+
+    if (!token) {
+      throw new AppError(400, "Google token missing");
     }
-  const jti = uuidv4();
+
+    //  Verify Google token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload) {
+      throw new AppError(401, "Invalid Google token");
+    }
+
+    const { email, name, picture } = payload;
+
+    //  Create or find user
+    const user = await this.userService.googleSync(
+      email!,
+      name!,
+      picture!
+    );
+
+    if (!user) {
+      throw new AppError(400, "User creation failed");
+    }
+
+    // ================= JWT GENERATION =================
+    const jti = uuidv4();
+
     const accessToken = jwt.sign(
       {
-        id: user._id,
+        id: user.id,
         email: user.email,
         role: user.role,
         isBlocked: user.isBlocked,
@@ -143,45 +205,43 @@ export class UserController implements IUserController {
     );
 
     const refreshToken = jwt.sign(
-      { id: user._id, jti },
+      { id: user.id, jti },
       process.env.JWT_REFRESH_SECRET!,
       { expiresIn: "1d" }
     );
 
-      // Store refresh token in Redis with TTL
-  await redisClient.set(`refresh:${jti}`, user._id.toString(), {
-    EX: 60 * 60 * 24,
-  });
+    //  Store refresh token in Redis
+    await redisClient.set(`refresh:${jti}`, user.id.toString(), {
+      EX: 60 * 60 * 24,
+    });
 
+    // ================= COOKIES =================
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: false,
+      sameSite: "lax",
       maxAge: 30 * 60 * 1000,
     });
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 1 * 24 * 60 * 60 * 1000,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
-    res.json({ message: "Tokens set" });
-  };
-
-  googleSync = async (req: Request, res: Response): Promise<void> => {
-    const { email, name, image } = req.body;
-    const user = await this.userService.googleSync(email, name, image);
-     if (!user) throw new AppError(STATUS_CODES.BAD_REQUEST, 'Invalid credentials');
-
-    
+    // ================= RESPONSE =================
     res.json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      isVerified: user.isVerified,
-      isBlocked: user.isBlocked,
+      message: "Google login successful",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified,
+        isBlocked: user.isBlocked,
+        profilePicture: user.profilePicture,
+      },
     });
   };
 
@@ -218,13 +278,13 @@ export class UserController implements IUserController {
 
      const newJti = uuidv4();
     const newAccessToken = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
+      { id: user._id.toString(), email: user.email, role: user.role },
       process.env.JWT_ACCESS_SECRET!,
       { expiresIn: "30m" }
     );
 
     const newRefreshToken = jwt.sign(
-      { id: user._id, jti: newJti },
+      { id: user._id.toString(), jti: newJti },
       process.env.JWT_REFRESH_SECRET!,
       { expiresIn: "1d" }
     );
@@ -236,20 +296,42 @@ export class UserController implements IUserController {
 
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+     secure: false,
       sameSite: "lax",
       maxAge: 30 * 60 * 1000,
     });
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+     secure: false,
       sameSite: "lax",
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
 
     res.json({ message: "Tokens refreshed" });
   };
+getCurrentUser = async (req: Request, res: Response): Promise<void> => {
+  const userId = req.user?.id;
 
+  if (!userId) {
+    throw new AppError(STATUS_CODES.UNAUTHORIZED, "Unauthorized");
+  }
+
+  const user = await this.userService.getUserById(userId);
+
+  if (!user) {
+    throw new AppError(STATUS_CODES.NOT_FOUND, "User not found");
+  }
+
+res.json({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    isVerified: user.isVerified,
+    isBlocked: user.isBlocked,
+    profilePicture: user?.profilePicture
+  });
+};
   logout = async (req: Request, res: Response): Promise<void> => {
     const refreshToken = req.cookies.refreshToken;
     if (refreshToken) {
@@ -265,14 +347,14 @@ export class UserController implements IUserController {
 
     res.clearCookie("accessToken", {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+    secure: false,
+      sameSite: "lax",
     });
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: false,
+      sameSite: "lax",
     });
     res.json({ message: "Logged out" });
   };

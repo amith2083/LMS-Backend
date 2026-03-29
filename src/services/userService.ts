@@ -7,7 +7,7 @@ import bcrypt from 'bcrypt';
 import { Express } from 'express';
 import { STATUS_CODES } from '../constants/http';
 import { IUserService } from '../interfaces/user/IUserService';
-import { GetEmailUserResponseDTO, LoginUserResponseDTO, UpdateUserResponseDTO, UserResponseDTO } from '../dtos/userDto';
+import { GetEmailUserResponseDTO, LoginUserResponseDTO, UpdateUserProfileImageResponse, UpdateUserResponseDTO, UserResponseDTO } from '../dtos/userDto';
 import { mapUserDocumentToDTO, mapUserDocumentToGetEmailResponseDTO, mapUserDocumentToLoginUserResponeDto, mapUserDocumentToUpdateUserResponDto,  } from '../mappers/userMapper';
 import { IUserDocument } from '../models/user';
 import { GetEmailResponse } from 'resend';
@@ -92,7 +92,30 @@ export class UserService implements IUserService {
     // if (!updated) throw new AppError(STATUS_CODES.NOT_FOUND, 'User not found');
     return updated? mapUserDocumentToUpdateUserResponDto(updated):null;
   }
+async updateProfileImage(
+  userId: string,
+  file: Express.Multer.File
+): Promise<UpdateUserProfileImageResponse| null> {
+  if (!file) throw new AppError(400, "Image file is required");
+  // Upload to cloudinary
+  const imageUrl = await this.fileUploadService.uploadFile(
+    file,
+    "lms/profile-images"
+  );
 
+  const updated = await this.userRepository.updateUser(userId, {
+    profilePicture: imageUrl,
+  });
+
+  if (!updated?.profilePicture) {
+      throw new AppError(500, "Course image update failed");
+    }
+
+    return {
+      _id: updated._id.toString(),
+      profilePicture: updated.profilePicture,
+    };
+}
   async login(email: string, password: string): Promise<LoginUserResponseDTO|null> {
     const user = await this.userRepository.getUserByEmail(email);
     

@@ -128,35 +128,32 @@ if (results.length === 0) {
     const completion = await openai.chat.completions.create({
       model: "openai/gpt-oss-20b:free",
       temperature: 0.2,
-      max_tokens: 2000,
-      messages: [
-        {
-          role: "system",
-          content: `
+      max_tokens: 200,
+     messages: [
+  {
+    role: "system",
+    content: `
 You are an LMS course advisor.
+
 STRICT RULES:
 - DO NOT use tables.
-- DO NOT use markdown tables.
 - Respond in simple bullet points.
 - Keep response short and clean.
-- Use plain text formatting only
 Use ONLY the provided course context.
-If the answer is not in context, say:
+
+If the answer is not in context say:
 "I don't have information about that in our available courses."
-
-Be concise and structured.
-`,
-        },
-       {
-    role: "assistant",
-    content: context
+`
   },
-
+  {
+    role: "assistant",
+    content: `Course Context:\n${context}`
+  },
   {
     role: "user",
     content: query
   }
-      ],
+]
     });
  // Return AI response safely
     return (

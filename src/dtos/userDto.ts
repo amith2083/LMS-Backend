@@ -4,6 +4,9 @@ export interface UserResponseDTO {
   email: string;
   role: 'admin' | 'instructor' | 'student';
   profilePicture?: string;
+  designation?: string;
+  phone?: number;
+  website?: string;
   bio?: string;
   isBlocked?: boolean;
   isVerified?: boolean;
@@ -46,6 +49,9 @@ export interface LoginUserResponseDTO {
   isBlocked?: boolean;
   isVerified?: boolean;
 }
-
+export interface UpdateUserProfileImageResponse {
+  _id: string;
+  profilePicture?: string;
+}
 
 

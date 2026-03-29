@@ -14,6 +14,9 @@ export const mapUserDocumentToDTO = (user: IUserDocument): UserResponseDTO => ({
   isBlocked: user.isBlocked,
   isVerified: user.isVerified,
   profilePicture: user.profilePicture,
+  designation: user.designation,
+  phone: user.phone,
+  website: user.website,
   bio: user.bio,
   createdAt: user.createdAt,
 });
